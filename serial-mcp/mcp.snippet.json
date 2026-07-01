@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "serial": {
+      "command": "uv",
+      "args": ["run", "--project", "/home/andre/tools/serial-mcp", "serial-mcp"]
+    }
+  }
+}

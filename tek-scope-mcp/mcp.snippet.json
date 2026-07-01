@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "tek-scope": {
+      "command": "uv",
+      "args": ["run", "--project", "/home/andre/tools/tek-scope-mcp", "tek-scope-mcp"]
+    }
+  }
+}

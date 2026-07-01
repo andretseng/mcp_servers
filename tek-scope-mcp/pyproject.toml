@@ -1,0 +1,23 @@
+[project]
+name = "tek-scope-mcp"
+version = "0.1.0"
+description = "MCP server that controls a Tektronix TDS3054B oscilloscope over Ethernet: VXI-11 (PyVISA) for setup/measurements + e*Scope HTTP for screenshots returned inline to Claude for analysis."
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]>=1.2.0",
+    "pyvisa>=1.13",
+    "pyvisa-py>=0.7",
+]
+
+[project.scripts]
+tek-scope-mcp = "tek_scope_mcp.server:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tek_scope_mcp"]
