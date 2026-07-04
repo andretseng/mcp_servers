@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sigrok": {
+      "command": "uv",
+      "args": ["run", "--project", "/home/andre/tools/sigrok-mcp", "sigrok-mcp"]
+    }
+  }
+}
