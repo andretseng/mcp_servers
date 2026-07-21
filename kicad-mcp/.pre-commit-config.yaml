@@ -1,0 +1,62 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: check-merge-conflict
+
+  - repo: https://github.com/psf/black
+    rev: 26.3.1
+    hooks:
+      - id: black
+        language_version: python3
+        args: [--config=pyproject.toml]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 8.0.1
+    hooks:
+      - id: isort
+        args: [--settings-path=pyproject.toml]
+
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier
+        entry: npx prettier --write --ignore-unknown
+        language: node
+        types_or: [javascript, ts, json, yaml, markdown]
+        exclude: ^(dist/|package-lock\.json|\.venv/|python/)
+
+  - repo: https://github.com/pycqa/flake8
+    rev: "7.3.0"
+    hooks:
+      - id: flake8
+        files: ^python/
+        args: [--config=.flake8]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.19.1"
+    hooks:
+      - id: mypy
+        files: ^python/
+        exclude: ^python/commands/board\.py$
+        args: [--config-file=pyproject.toml]
+        additional_dependencies:
+          - types-requests
+          - pytest
+
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint
+        entry: npx eslint --fix
+        language: node
+        types: [ts]
+        files: ^src/

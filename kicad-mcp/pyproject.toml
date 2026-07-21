@@ -1,0 +1,55 @@
+[project]
+name = "kicad-mcp-server"
+version = "2.1.0"
+requires-python = ">=3.9"
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = false
+warn_unused_configs = true
+check_untyped_defs = false
+disallow_untyped_defs = false
+explicit_package_bases = true
+mypy_path = ".:python"
+disable_error_code = [
+    "arg-type",
+    "attr-defined",
+    "union-attr",
+    "var-annotated",
+    "index",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "pcbnew",
+    "cairosvg",
+    "sexpdata",
+    "skip",
+    "fitz",
+    "kipy",
+    "kipy.*",
+    "schematic",
+    "PIL",
+    "PIL.*",
+    "win32api",
+    "win32con",
+    "win32gui",
+    "win32process",
+]
+ignore_missing_imports = true
+
+# SchematicHandlersMixin relies on attributes (e.g. self.board) provided by the host
+# KiCADInterface it is mixed into, so checking it standalone — or as a followed import
+# from another module — cannot determine their types. Suppress the resulting has-type
+# noise here so unrelated modules that merely import it are not blocked by it.
+[[tool.mypy.overrides]]
+module = ["commands.schematic_handlers"]
+disable_error_code = ["has-type"]

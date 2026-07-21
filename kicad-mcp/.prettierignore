@@ -1,0 +1,5 @@
+coverage.xml
+htmlcov/
+data/
+*.kicad_*
+.github/*.md

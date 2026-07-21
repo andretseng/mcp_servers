@@ -1,0 +1,55 @@
+{
+  "name": "kicad-mcp",
+  "version": "2.3.1",
+  "description": "AI-assisted PCB design with KiCAD via Model Context Protocol",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "start": "node dist/index.js",
+    "dev": "npm run build:watch & nodemon dist/index.js",
+    "clean": "rm -rf dist",
+    "rebuild": "npm run clean && npm run build",
+    "test": "npm run test:ts && npm run test:py",
+    "test:ts": "vitest run",
+    "test:ts:watch": "vitest",
+    "test:py": "pytest tests/ -v",
+    "test:coverage": "pytest tests/ --cov=python --cov-report=html --cov-report=term",
+    "lint": "npm run lint:ts && npm run lint:py",
+    "lint:ts": "eslint src/",
+    "lint:py": "cd python && black . && mypy . && flake8 .",
+    "format": "prettier --write 'src/**/*.ts' && black python/",
+    "prepare": "npm run build",
+    "pretest": "npm run build"
+  },
+  "keywords": [
+    "kicad",
+    "mcp",
+    "model-context-protocol",
+    "pcb-design",
+    "ai",
+    "claude"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.21.0",
+    "dotenv": "^17.0.0",
+    "express": "^5.1.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@cfworker/json-schema": "^4.1.1",
+    "@eslint/js": "^10.0.1",
+    "@types/express": "^5.0.5",
+    "@types/glob": "^8.1.0",
+    "@types/node": "^20.19.0",
+    "eslint": "^10.1.0",
+    "nodemon": "^3.0.1",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.2",
+    "vitest": "^2.1.9"
+  }
+}
