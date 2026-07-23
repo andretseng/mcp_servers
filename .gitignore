@@ -10,3 +10,6 @@ __pycache__/
 # Node deps and build output — never commit, regenerable via npm install/build
 node_modules/
 dist/
+
+# C build artifacts — never commit, regenerable via make
+*.o
