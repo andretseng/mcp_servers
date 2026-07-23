@@ -11,5 +11,5 @@ __pycache__/
 node_modules/
 dist/
 
-# C build artifacts — never commit, regenerable via make
-*.o
+# Nested git clone (own repo, backed up separately at its own origin)
+siitool/
