@@ -21,7 +21,9 @@ two consecutive `AA 55` headers and re-locks if a byte is dropped. Because there
 is no checksum, a single dropped byte can produce **one** mis-decoded frame
 before re-lock — inherent to the format, not a bug.
 
-Port defaults: **4,000,000 baud, 8N1** (UART1 / PA0).
+The AM13 profile uses **4,000,000 baud, 8N1** (UART1 / PA0). The server does
+not choose hardware settings; a device-specific profile must pass them to
+`attach()` explicitly.
 
 ## Why a broker (you can use serialplot at the same time)
 
@@ -44,9 +46,10 @@ pass through untranslated.
 
 | tool | purpose |
 |------|---------|
-| `attach(port, baud=4000000, channel1, channel2)` | claim port, start draining. `channel*` are plot labels. |
+| `get_profiles()` | list decoder profiles implemented by this server build |
+| `attach(port, baud, profile, channel1, channel2)` | claim port, start draining. Settings and labels come from the device-specific profile skill. |
 | `detach()` | release port, stop reader (mirror stays up, idle) |
-| `status()` | attached / frame-locked / mirror / have-capture |
+| `status()` | attached / profile / frame-locked / buffered-samples / mirror / have-capture |
 | `capture(duration_s=2.0)` | snapshot a window → summary + small preview |
 | `stats()` | min/max/mean/std + dominant FFT freq of last capture |
 | `plot(out_path=/tmp/serial_capture.png)` | render both channels to PNG |
@@ -104,6 +107,9 @@ Add to a project's `.mcp.json` (see `mcp.snippet.json`):
 - **XDS110 backchannel UART** is more constrained than an FTDI; 4 Mbaud may be
   flaky. First hardware check: `attach` then `status` — if `frame_locked` is
   false or `capture` returns nothing, suspect the baud rate first.
+- The current build implements only the `aa55-float32x2` decoder profile. A
+  device-specific profile skill must select it explicitly; other wire formats
+  require a new decoder profile before attachment.
 - On-demand snapshots, not a 60fps scope. For continuous live viewing, open the
   mirror PTY in serialplot.
 - Ring buffer default holds ~500k samples (seconds at the ISR frame rate).

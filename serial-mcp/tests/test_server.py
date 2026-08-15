@@ -19,6 +19,9 @@ class StubBroker:
         self.attached = True
         self.locked = True
         self._mirror_link = None
+        self._buffered_samples = 0
+        self.fail_mirror = False
+        self.detached = False
         t = np.arange(n) / rate
         self._rows = [(float(ti), float(np.sin(2 * np.pi * freq * ti)), 3.0) for ti in t]
 
@@ -28,20 +31,66 @@ class StubBroker:
     def samples_since(self, t0):
         return self._rows
 
+    @property
+    def buffered_samples(self):
+        return self._buffered_samples
+
+    def attach(self, port, baud):
+        self.attached = True
+
+    def detach(self):
+        self.attached = False
+        self.detached = True
+
+    def start_mirror(self, link):
+        if self.fail_mirror:
+            raise RuntimeError("mirror path unavailable")
+        self._mirror_link = link
+        return link
+
 
 @pytest.fixture(autouse=True)
 def stub(monkeypatch):
     monkeypatch.setattr(srv, "_broker", StubBroker())
     monkeypatch.setattr(srv.time, "sleep", lambda _s: None)  # don't actually wait
     monkeypatch.setattr(srv, "_last", None)
+    monkeypatch.setattr(srv, "_profile", None)
     monkeypatch.setattr(srv, "_labels", ("delta", "angle"))
 
 
 def test_tools_are_registered():
     # All advertised tools must be present in the FastMCP registry.
     names = {t.name for t in srv.mcp._tool_manager.list_tools()}
-    assert {"attach", "detach", "status", "capture", "stats", "plot",
+    assert {"get_profiles", "attach", "detach", "status", "capture", "stats", "plot",
             "start_mirror", "stop_mirror"} <= names
+
+
+def test_status_reports_buffered_sample_count():
+    assert srv.status()["buffered_samples"] == 0
+
+
+def test_attach_discards_capture_from_previous_port():
+    srv._last = {"t": np.array([0.0]), "ch1": np.array([1.0]),
+                 "ch2": np.array([2.0]), "rate": 0.0}
+
+    result = srv.attach("/dev/test", baud=4_000_000,
+                        profile="aa55-float32x2", channel1="new1", channel2="new2")
+
+    assert result["attached"] is True
+    assert result["profile"] == "aa55-float32x2"
+    assert srv._last is None
+    assert srv.status()["channels"] == ["new1", "new2"]
+
+
+def test_attach_releases_port_if_mirror_setup_fails():
+    srv._broker.fail_mirror = True
+
+    with pytest.raises(RuntimeError, match="mirror path unavailable"):
+        srv.attach("/dev/test", baud=4_000_000,
+                   profile="aa55-float32x2", channel1="new1", channel2="new2")
+
+    assert srv._broker.detached is True
+    assert srv._profile is None
 
 
 def test_stats_before_capture_fails_loud():

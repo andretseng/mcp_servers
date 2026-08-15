@@ -65,3 +65,31 @@ def test_mirror_write_with_no_reader_does_not_raise():
             b._mirror_write(b"\xaa\x55" + b"\x00" * 8)  # no reader attached
     finally:
         b.stop_mirror()
+
+
+def test_mirror_can_be_repointed():
+    first = os.path.join(tempfile.gettempdir(), "ttySERIAL_first")
+    second = os.path.join(tempfile.gettempdir(), "ttySERIAL_second")
+    b = Broker()
+    try:
+        assert b.start_mirror(first) == first
+        assert b.start_mirror(second) == second
+        assert not os.path.lexists(first)
+        assert os.path.islink(second)
+    finally:
+        b.stop_mirror()
+
+
+def test_mirror_does_not_delete_a_regular_file():
+    path = os.path.join(tempfile.gettempdir(), "ttySERIAL_existing_file")
+    with open(path, "w") as f:
+        f.write("keep me")
+    b = Broker()
+    try:
+        import pytest
+        with pytest.raises(FileExistsError):
+            b.start_mirror(path)
+        assert open(path).read() == "keep me"
+    finally:
+        b.stop_mirror()
+        os.unlink(path)

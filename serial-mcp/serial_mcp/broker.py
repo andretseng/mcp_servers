@@ -22,6 +22,7 @@ from .parser import FrameDecoder
 class Broker:
     def __init__(self, ring_size: int = 500_000):
         self._ser: serial.Serial | None = None
+        self._baud: int | None = None
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
         self._ring: deque[tuple[float, float, float]] = deque(maxlen=ring_size)
@@ -41,6 +42,7 @@ class Broker:
             raise RuntimeError(f"already attached to {self._ser.port}; detach first")
         # Fail loud: if the port can't be opened (e.g. board unplugged), raise.
         self._ser = serial.Serial(port, baudrate=baud, timeout=0.05, exclusive=True)
+        self._baud = baud
         self._decoder = FrameDecoder()
         with self._lock:
             self._ring.clear()
@@ -59,25 +61,47 @@ class Broker:
         if self._ser is not None:
             self._ser.close()
             self._ser = None
+        self._baud = None
 
     # ---- reader thread ---------------------------------------------------
     def _run(self) -> None:
         ser = self._ser
-        while not self._stop.is_set():
+        if ser is None:
+            return
+        try:
+            while not self._stop.is_set():
+                try:
+                    data = ser.read(ser.in_waiting or 1)
+                except (serial.SerialException, OSError):
+                    break  # port went away; finally closes the stale handle
+                if not data:
+                    continue
+                ts = time.monotonic()
+                samples = self._decoder.feed(data)
+                if samples:
+                    # The wire format is fixed at 10 bytes/frame and 8N1, so
+                    # use the nominal wire period instead of one timestamp for
+                    # every frame returned by a single OS read.
+                    period = (10 * 10 / self._baud) if self._baud else 0.0
+                    first_ts = ts - period * (len(samples) - 1)
+                    with self._lock:
+                        for index, (d1, d2) in enumerate(samples):
+                            self._ring.append((first_ts + index * period, d1, d2))
+                if self._mirror_fd is not None:
+                    self._mirror_write(data)
+        finally:
+            # A vanished port must not leave an exclusive file descriptor open.
+            # Guard shared state so a newer attach cannot be cleared by an old
+            # reader thread finishing its cleanup.
             try:
-                data = ser.read(ser.in_waiting or 1)
+                ser.close()
             except (serial.SerialException, OSError):
-                break  # port went away; thread exits, attached becomes False
-            if not data:
-                continue
-            ts = time.monotonic()
-            samples = self._decoder.feed(data)
-            if samples:
-                with self._lock:
-                    for d1, d2 in samples:
-                        self._ring.append((ts, d1, d2))
-            if self._mirror_fd is not None:
-                self._mirror_write(data)
+                pass
+            if self._ser is ser:
+                self._ser = None
+                self._baud = None
+            if self._thread is threading.current_thread():
+                self._thread = None
 
     @property
     def locked(self) -> bool:
@@ -91,10 +115,21 @@ class Broker:
         with self._lock:
             return [s for s in self._ring if s[0] >= t0]
 
+    @property
+    def buffered_samples(self) -> int:
+        with self._lock:
+            return len(self._ring)
+
     # ---- opt-in mirror ---------------------------------------------------
     def start_mirror(self, link: str) -> str:
         if self._mirror_fd is not None:
-            return self._mirror_link  # already running
+            if self._mirror_link == link:
+                return link
+            if os.path.lexists(link) and not os.path.islink(link):
+                raise FileExistsError(
+                    f"mirror path exists and is not a symlink: {link}"
+                )
+            self.stop_mirror()
         master_fd, slave_fd = os.openpty()
         # Raw mode: pass binary through untouched. Without this the default
         # cooked discipline line-buffers and translates NL/CR, which would
@@ -105,11 +140,12 @@ class Broker:
         slave_name = os.ttyname(slave_fd)
         os.close(slave_fd)  # serialplot opens the slave by path; master stays ours
         # Stable, user-facing path -> the kernel-assigned /dev/pts/N
-        try:
-            if os.path.islink(link) or os.path.exists(link):
-                os.unlink(link)
-        except OSError:
-            pass
+        if os.path.lexists(link):
+            if not os.path.islink(link):
+                raise FileExistsError(
+                    f"mirror path exists and is not a symlink: {link}"
+                )
+            os.unlink(link)
         os.symlink(slave_name, link)
         self._mirror_fd = master_fd
         self._mirror_link = link

@@ -1,7 +1,9 @@
 """FastMCP server exposing the serial broker to Claude.
 
 Workflow:
-    attach(port)            -> claim the port, start draining, expose the PTY mirror
+    get_profiles()          -> list decoder profiles implemented by this build
+    attach(port, baud, profile, channel1, channel2)
+                            -> claim the port and start draining
     capture(duration_s)     -> snapshot a time window into "last capture"
     stats() / plot()        -> analyze / render the last capture
     detach()                -> release the port
@@ -24,19 +26,19 @@ import numpy as np  # noqa: E402
 from mcp.server.fastmcp import FastMCP  # noqa: E402
 
 from .broker import Broker  # noqa: E402
-from .parser import DEFAULT_CHANNELS  # noqa: E402
 
 mcp = FastMCP("serial-mcp")
 _broker = Broker()
 
 # Mutable session state
-_labels: tuple[str, str] = DEFAULT_CHANNELS
+_labels: tuple[str, str] = ("", "")
 _last: dict | None = None  # {"t": np, "ch1": np, "ch2": np, "rate": float}
+_profile: str | None = None
 
-DEFAULT_BAUD = 4_000_000
-# Neutral, project-agnostic default (this tool is shared across motor + drone).
-# Override per call via start_mirror(link=...), or set a per-project default in
-# .mcp.json with "env": {"SERIAL_MCP_MIRROR": "/tmp/ttyMOTOR0"}.
+# The decoder is selected by the device-specific profile skill. Keep the
+# transport server explicit so a different project's bytes cannot be silently
+# decoded with the AM13 profile.
+SUPPORTED_PROFILES = {"aa55-float32x2"}
 DEFAULT_MIRROR_LINK = os.environ.get("SERIAL_MCP_MIRROR", "/tmp/ttySERIAL0")
 
 
@@ -46,36 +48,57 @@ def _require_attached() -> None:
 
 
 @mcp.tool()
-def attach(port: str, baud: int = DEFAULT_BAUD,
-           channel1: str = DEFAULT_CHANNELS[0], channel2: str = DEFAULT_CHANNELS[1]) -> dict:
+def get_profiles() -> dict:
+    """List decoder profiles implemented by this server build."""
+    return {"profiles": sorted(SUPPORTED_PROFILES)}
+
+
+@mcp.tool()
+def attach(port: str, baud: int, profile: str, channel1: str, channel2: str) -> dict:
     """Claim a serial port and start draining it continuously.
 
-    channel1/channel2 are just labels for plots/stats; set them to whatever the
-    firmware currently points pDacCtrl1/2->pDacOutAddr at this session.
+    The profile, baud, and channel labels must be supplied by the device-specific
+    profile skill. channel1/channel2 are labels for plots/stats.
     """
-    global _labels
+    global _labels, _last, _profile
+    if profile not in SUPPORTED_PROFILES:
+        raise ValueError(
+            f"unsupported decoder profile {profile!r}; "
+            f"supported: {sorted(SUPPORTED_PROFILES)}"
+        )
     _broker.attach(port, baud)
     _labels = (channel1, channel2)
+    _last = None
+    _profile = profile
     # Always expose the serialplot mirror while attached, so the virtual port is
     # available the moment we're connected (no separate start_mirror() needed).
-    link = _broker.start_mirror(DEFAULT_MIRROR_LINK)
-    return {"attached": True, "port": port, "baud": baud,
+    try:
+        link = _broker.start_mirror(DEFAULT_MIRROR_LINK)
+    except Exception:
+        _broker.detach()
+        _profile = None
+        raise
+    return {"attached": True, "port": port, "baud": baud, "profile": profile,
             "channels": list(_labels), "mirror_link": link}
 
 
 @mcp.tool()
 def detach() -> dict:
-    """Release the serial port and stop the reader/mirror."""
+    """Release the serial port and stop the reader; leave the mirror idle."""
+    global _profile
     _broker.detach()
+    _profile = None
     return {"attached": False}
 
 
 @mcp.tool()
 def status() -> dict:
-    """Current attach/lock/mirror state and buffered sample count."""
+    """Current attach/profile/lock/mirror state and buffered sample count."""
     return {
         "attached": _broker.attached,
         "frame_locked": _broker.locked,
+        "buffered_samples": _broker.buffered_samples,
+        "profile": _profile,
         "channels": list(_labels),
         "mirror_link": _broker._mirror_link,
         "have_capture": _last is not None,
