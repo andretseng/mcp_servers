@@ -1,0 +1,2522 @@
+{
+  "entries": {
+    "MSPM0G_TRM_UNICOMM-SPI_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-15",
+      "output_note": "專業領域/MSPM0G/UNICOMM-SPI模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "UNICOMM-SPI (Chapter 31 -- UNICOMM module configured as SPI: FIFO/shift-logic, Motorola/TI frame formats, Command/Data control, Chip Select rotate/delay, DMA trigger, interrupts)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G)",
+      "pages_analyzed": "1693-1747 (Chapter 31 UNICOMM-SPI 全章, 55 pages, single-file module mode, inline analysis, no spawn)",
+      "flags": "Chip family MSPM0 not in skill's fixed Sub-step A table (am13/am261x/am275x/c2000/c29x only) -- same manual approach as sibling MSPM0G entries: grepped/read local mspm0_sdk_2_11_00_07 directly (source/ti/driverlib/dl_spi.h for ~100 deduped DL_SPI_* functions shared by both dedicated-SPI and UNICOMM-SPI instances, dl_unicommspi.h for enums/structs DL_SPI_Config/ClockConfig/backupConfig, dl_unicomm.h for DL_UNICOMM_setIPMode/enablePower/reset; hw register headers hw_unicommspi.h + hw_unicomm.h). Chapter located by running pdf_toc.py --search with the exact user-supplied module name 'UNICOMM-SPI' -- this was necessary because fuzzy searches on 'UNICOMM' alone matched a different chapter ('27 UNICOMM', pages 1474-1494, the shared IPMODE/SPG architecture layer already covered by the pre-existing sibling note) and 'SPI' alone matched yet another chapter ('26 SPI', pages 1414-1473, a generically-named but functionally near-identical chapter); only the exact module-name search resolved the correct dedicated 'Chapter 31 UNICOMM-SPI' (1693-1747). Confirmed via direct SDK read that all 12 real (non-boilerplate) spi_* driverlib examples in examples/nortos/LP_MSPM0G5187 define SPI_0_INST as UC2 (a UNICOMM instance, not a dedicated SPI0/SPI1 peripheral) -- cross-checked against the sibling UNICOMM note's Table 27-1 capability matrix confirming UC2=PD1/SPI-Advanced-only, consistent with this chapter's Table 31-1 Advanced-tier features (Repeat Mode/Receive Timeout/Command-Data Control/4x CS) all being present in the extracted register set. Documented a real TRM internal inconsistency rather than silently resolving it: Table 31-5 (SPI CPU_INT Trigger Conditions) omits IIDX values 0x13/0x14 (DMA PRE IRQ RX/TX) that ARE listed in the IIDX register's own field-description table (Section 31.3.3) -- confirmed these events genuinely exist in hardware via SDK enums DL_SPI_IIDX_PREIRQ_RX/TX, reported the gap in note SS4.1/SS11 rather than treating Table 31-5 as complete. Also flagged in SS7/SS11: SYSCFG-generated init code calls DL_SPI_enablePower/reset (SPI_Regs* typed) rather than the chapter-27-documented DL_UNICOMM_enablePower/reset (UNICOMM_Inst_Regs* typed) for the same underlying GPRCM registers -- a dual-API-surface trap worth flagging for future firmware work. SPI_CNTR register (offset 1150h) has only a register-table description with no functional-section (S31.2.x) prose explaining it -- reported as-is (thin documentation), not invented."
+    },
+    "MSPM0G_TRM_LFSS_B_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-15",
+      "output_note": "專業領域/MSPM0G/LFSS_B模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "LFSS_B (Chapter 37 -- Low Frequency Subsystem: Clock System, LFSS Reset, RTC_B calendar/alarm/prescaler/calibration, IWDT, Lock Function, Tamper I/O x16, Scratch Pad Memory)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G)",
+      "pages_analyzed": "2298-2422 (Chapter 37 LFSS_B 全章, 125 pages, module mode, 3 parallel chunk-agents: 2298-2357/2358-2417/2418-2422, orchestrator synthesis)",
+      "flags": "Chip family MSPM0 not in skill's fixed Sub-step A table (am13/am261x/am275x/c2000/c29x only) -- same manual approach as sibling MSPM0G entries: grepped local mspm0_sdk_2_11_00_07 directly (dl_rtc_b.h/dl_rtc_common.h/.c for DL_RTC_B_*/DL_RTC_Common_* ~130 functions, dl_iwdt.h for 15 DL_IWDT_* thin macros redirecting to DL_LFSS_IWDT_* in dl_lfss.h/.c, plus ~50 DL_LFSS_*/DL_LFSS_TamperIO_* scratch-pad and tamper-IO functions; hw register headers hw_rtc.h + hw_lfss.h). Chunk 3 (pages 2418-2422) failed on first dispatch with an HTTP 429 session-limit error (reset 1:40am Asia/Taipei) -- retried once after the limit reset per system notification, succeeded. Commander cross-verified all register offsets cited by chunk-agents (CLKCTL@0x1100 through TSCLR@0x1170 in hw_rtc.h; LFSSRST@0x11F0, RTCLOCK@0x11FC, TIOCTL[16]@0x1200, HEARTBEAT@0x12C0, TIOLOCK@0x12FC, WDTEN-WDTLOCK@0x1300-13FC, SPMEM@0x1400, SPMWPROT0-7@0x1500-151C, SPMTERASE0-7@0x1540-155C in hw_lfss.h) via direct grep -n against the SDK headers -- all matched exactly, no fabricated offsets found. SDK example refs: RTC_B worked examples in this SDK version (2_11_00_07) only exist under LP_MSPM0L1117 (L-series board, rtc_b_offset_calibration_lfxt.c + rtc_b_calendar_alarm_standby.c) not a G-series board, but DL_RTC_B_* is common/shared driverlib identical across MSPM0 families -- cited with this caveat rather than silently presented as G-series-native; IWDT example is genuinely G-series (LP_MSPM0G5187/driverlib/iwdt_periodic_reset). Documented two real TRM-text artifacts found in the extracted pages rather than silently correcting them: WDTCTL.PER table's power-of-2 exponent superscripts were lost in PDF text extraction (note SS9/SS11 flags this explicitly, does not invent the missing exponents); TOUT3_0/TOUT7_4 field descriptions have an internal pin-label inconsistency (bit16 labeled both TIO0 and TIO2/TIO6 in different places) and TSYEAR's YEARLOWESTBCD field is printed as YERARLOWESTBCD in the source -- both reported verbatim in note SS11 rather than corrected."
+    },
+    "MSPM0G_TRM_MATHACL_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/MATHACL模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "MATHACL (Chapter 10 -- Math Accelerator: SINCOS/ATAN2/SQRT/DIV/MPY32/SQUARE32/MPY64/SQUARE64/MAC/SAC)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G)",
+      "pages_analyzed": "774-801 (Chapter 10 MATHACL 全章, 28 pages, module mode, 1 chunk, inline)",
+      "flags": "Chip family MSPM0 not in skill's fixed Sub-step A table (am13/am261x/am275x/c2000/c29x only) -- same manual approach as sibling MSPM0G entries: grepped/read local mspm0_sdk_2_11_00_07 directly (source/ti/driverlib/dl_mathacl.h/.c, 27 DL_MathACL_* functions incl. 6 start*Operation macro aliases; hw register header source/ti/devices/msp/peripherals/hw_mathacl.h). Confirmed dedicated SDK examples (LP_MSPM0G3507/driverlib/mathacl_trig_op, mathacl_mpy_div_op) match TRM register semantics exactly, cited with real line numbers. Found and reported two genuine issues: (1) hw_mathacl.h defines MATHACL_STATUS_OVF_NO_OVERFLOW and MATHACL_STATUS_OVF_OVERFLOW as the SAME value (0x00000000U) -- the public DL_MATHACL_STATUS_OVERFLOW alias is therefore inverted for its intended equality-comparison use; flagged in note SS11 with the correct mask-based workaround. (2) SDK exposes an Underflow (UF) status bit + DL_MathACL_clearUnderflowStatus() at STATUS/STATUSCLR bit 0, but the TRM's own SS10.5.9/10.5.10 register tables mark that same bit RESERVED and never describe UF -- flagged as TRM/SDK gap in note SS4 rather than silently treated as verified. Also cross-referenced source/ti/motor_control_pmsm_foc/common_modules/IQmath/_IQNfunctions/_IQNdiv_mathacl.h:97-107 (direct MATHACL->CTL/OP1/OP2/RES1 register writes bypassing driverlib, used by FOC IQmath division) since it directly confirms the register-level semantics and is relevant to this vault's motor-control focus."
+    },
+    "MSPM0G_TRM_CPU_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/CPU模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "CPU (Chapter 3 -- MCPUSS: Arm Cortex-M0+ core, NVIC/INT_GROUP, SCB, SysTick, MPU, CPUSS/WUC registers)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G)",
+      "pages_analyzed": "470-503 (Chapter 3 CPU 全章, 34 pages, module mode, 1 chunk, inline, -N no-SDK)",
+      "flags": "-N; naive substring TOC search on query \"CPU\" false-matched \"2.3.2.2 CPUCLK (Processor Clock)\" first (same known issue as sibling OPA entry's \"Propagation\" collision) -- resolved via full-TOC dump + grep for level-1 entries containing cpu/cortex/processor, found single top-level chapter \"3 CPU\" at page 470, end boundary taken from next level-1 entry \"4 SECURITY\" at page 504. Section 12 API table built from CMSIS macros given directly in the document's own Table 3-2/3-6/3-7/3-8 (NVIC->/SCB->/SysTick->/MPU->), not from SDK grep -- -N flag means no driverlib DL_* functions were looked up or confirmed. Concurrent peer session (llm-wiki-38) sent a heads-up mid-run that it ran pdf_cleanup.py --orphans while starting module \"Events\" on the same PDF; this run's own orphan-purge (Step 0) had already completed cleanly before that message arrived and no chunk files were in flight yet, so no re-extraction was needed."
+    },
+    "MSPM0G_TRM_IOMUX_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/IOMUX模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "IOMUX (Chapter 8)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G)",
+      "pages_analyzed": "650-660 (module mode, Chapter 8 IOMUX, 1 chunk, inline)",
+      "flags": "Chip family MSPM0 not in skill's fixed Sub-step A table (am13/am261x/am275x/c2000/c29x only) -- same manual approach as sibling MSPM0G_TRM_OPA/TIMx entries: grepped local mspm0_sdk_2_11_00_07 directly. No dedicated dl_iomux.c -- IOMUX pin-config functions (DL_GPIO_initPeripheralFunction/OutputFunction/InputFunction(+Features)/AnalogFunction, enableHiZ/disableHiZ, enable/disableWakeUp, setWakeupCompareValue, isWakeStateGenerated) live inside source/ti/driverlib/dl_gpio.h against the IOMUX->SECCFG.PINCM[251] register array (hw_iomux.h, base 0x40428000). Confirmed prose/register-table naming inconsistency: SS8.2.2 calls the Hi-Z-conversion bit \"Z1\" three times in running text, but Table 8-5 and the SDK enum/macro (IOMUX_PINCM_HIZ1_ENABLE, DL_GPIO_HIZ) both name it HIZ1 -- reported verbatim in note SS11 rather than silently resolved. Found a concurrent peer session had already created 專業領域/MSPM0G/GPIO模組分析 (SLAU846E).md and 專業領域/MSPM0/ADC模組分析 (SLAU846E).md not yet reflected in this registry at read time (same concurrency pattern flagged in the ADC/TIMx entries) -- did not touch those files, only appended this entry."
+    },
+    "MSPM0_TRM_ADC_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/ADC模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "ADC (ADC12)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (G351x/G151x/G321x/G320x/G121x/G120x/G122x/G322x/G511x/G5187)",
+      "pages_analyzed": "1016-1112 (Chapter 18 ADC 全章, module mode, 2 parallel chunk-agents: 1016-1075/1076-1112, orchestrator synthesis)",
+      "flags": "mspm0 chip-family is NOT in skill's fixed Sub-step A SDK directory table (only am13/am261x/am275x/c2000/c29x listed) -- extended by analogy since mspm0_sdk_2_11_00_07 is installed and uses the same DL_ prefix driverlib naming convention as the AM-series; SDK context from mspm0_sdk_2_11_00_07 source/ti/driverlib/dl_adc12.h (73 DL_ADC12_* functions) + source/ti/devices/msp/peripherals/hw_adc12.h; examples from LP_MSPM0G3218 board. Consider adding mspm0 -> $sdkRoot/mspm0_sdk_*/source/ti/driverlib/ + source/ti/devices/msp/peripherals/ to skill's chip-family table if more MSPM0 docs get analyzed. Also hit a concurrency bug: multiple other sessions ran /pdf-analysis in parallel against the same vault (see sibling MSPM0G_TRM_OPA entry, also flagging the same missing chip-family), and one session's Step 0 orphan-purge (pdf_cleanup.py --orphans, unscoped glob) deleted this run's in-flight _ADC_p*.txt chunk files mid-read -- both chunk-agents had to be re-extracted and (for chunk 2) re-dispatched once. Document itself flags an internal contradiction (S18.1 vs S18.2.1) on STANDBY/SHUTDOWN availability, and a register-naming inconsistency (prose says FPUB_0, Table 18-10 + SDK header confirm FPUB_1) -- both reported verbatim in the note rather than silently resolved."
+    },
+    "MSPM0G_TRM_OPA_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/OPA模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G)",
+      "pages_analyzed": "1201-1222 (module mode, Chapter 21 OPA, 1 chunk, inline)",
+      "flags": "Chip family MSPM0 not in skill's fixed Sub-step A table (am13/am261x/am275x/c2000/c29x only) -- applied the same DL_-prefix driverlib search methodology manually against local mspm0_sdk_2_11_00_07 (source/ti/driverlib/dl_opa.h/.c, DL_OPA_* functions; hw register header source/ti/devices/msp/peripherals/hw_oa.h). Confirmed CFGBASE register (offset 1104h, GBW+RRI fields) exists in SDK header but is missing from the TRM's own Table 21-7 register summary -- documented as a TRM gap in note §11. TOC --search fell back to naive substring match on short queries (\"OPA\" false-matched \"Propagation\"; \"Amplifier\" matched wrong chapter) -- resolved via full-TOC dump + targeted grep instead."
+    },
+    "MSPM0G_TRM_TIMx_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/TIMx模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G)",
+      "module": "TIMx (Chapter 35 Timers -- shared TIMA/TIMG architecture)",
+      "pages_analyzed": "2103-2250 (module mode, Chapter 35, 148 pages, 3 parallel chunk-agents: 2103-2162/2163-2222/2223-2250, orchestrator synthesized)",
+      "flags": "Chip family MSPM0 not in skill's fixed Sub-step A table (am13/am261x/am275x/c2000/c29x only) -- same manual approach as MSPM0G_TRM_OPA entry above: grepped local mspm0_sdk_2_11_00_07 directly (source/ti/driverlib/dl_timer*.c/.h, 182 deduped DL_Timer/DL_TimerA/DL_TimerB/DL_TimerH functions; hw register headers source/ti/devices/msp/peripherals/hw_gptimer.h, hw_btimer.h). Note initially written to 專業領域/MSPM0/ (singular) before discovering a concurrent peer session had already established 專業領域/MSPM0G/ via the sibling OPA note -- moved to match. grep -rl \"DL_Timer\" against examples/ returned only generic LP_MSPM0L1117 board examples (UART/PWM-LED/ADC-to-PWM/power-sequencing), none TIMx-specific and none confirmed to call the cited APIs -- SDK-mapping table's 範例出處 column is all '--' as a result."
+    },
+    "MSPM0G_TRM_TIMB_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/TIMB模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "TIMB (Chapter 36 -- Basic Timer, standalone from Chapter 35 TIMx/TIMA-TIMG)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G)",
+      "pages_analyzed": "2251-2297 (Chapter 36 TIMB 全章, 47 pages, module mode, 1 chunk, inline)",
+      "flags": "Chip family MSPM0 not in skill's fixed Sub-step A table (am13/am261x/am275x/c2000/c29x only) -- same manual approach as sibling MSPM0G_TRM_TIMx/OPA entries: grepped/read local mspm0_sdk_2_11_00_07 directly (source/ti/driverlib/dl_timerb.h/.c, 40 deduped DL_TimerB_* functions + 5 enums DL_TIMERB_CLOCK_SOURCE/START_SOURCE/STOP_SOURCE/RESET_SOURCE/CORE_HALT + DL_TimerB_TimerConfig struct; hw register header source/ti/devices/msp/peripherals/hw_btimer.h). TIMB is a separate chapter/peripheral from Chapter 35 TIMx (TIMA/TIMG shared architecture, already covered in MSPM0G_TRM_TIMx_slau846e.pdf) -- confirmed distinct via pdf_toc.py --search returning a separate top-level chapter '36 TIMB' at page 2251, right after TIMx's own end boundary (2250). Found and reported a real TRM-vs-SDK discrepancy: TRM prose (S36.1.1) claims 'Configurable array of 2-8 counters' but this SDK build's hw_btimer.h generates BTIMER_Regs.CTRREGS[2] (only 2 counters), confirmed consistent with the only two direct-hit examples (LP_MSPM0G5187 driverlib/timb_chain_32timer and timb_pwm_emulation, both Read/Grep-confirmed at ti_msp_dl_config.c line level) which only ever use COUNTER_0/COUNTER_1 -- flagged in note SS11 as device-specific, not a document error. Also documented the dual parallel interrupt/event register bank architecture (CPU_INT @1020h driving BTIMINT vs GEN_EVENT @1050h driving BTIMEVT/Publisher, identical field layout) since the PDF's own register table lists IIDX/IMASK/RIS/MIS/ISET/ICLR twice without explaining why -- resolved by reading hw_btimer.h struct layout (CPU_INT_Regs vs GEN_EVENT_Regs) and the driverlib source (enableInterrupt->CPU_INT.IMASK vs enableEvent->GEN_EVENT.IMASK)."
+    },
+    "MSPM0G_TRM_PMCU_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/PMCU模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "PMCU (Chapter 2 -- PMU + Clock Module (CKM) + SYSCTL)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (G351x/G151x/G321x/G320x/G121x/G120x/G122x/G322x/G511x/G5187)",
+      "pages_analyzed": "228-469 (Chapter 2 PMCU 全章, 242 pages, module mode, 5 parallel chunk-agents: 228-287/288-347/348-407/408-467/468-469, orchestrator synthesis)",
+      "flags": "Chip family MSPM0 not in skill's fixed Sub-step A table (am13/am261x/am275x/c2000/c29x only) -- same manual approach as sibling MSPM0G_TRM_ADC/OPA/TIMx entries: grepped local mspm0_sdk_2_11_00_07 directly (source/ti/driverlib/m0p/sysctl/dl_sysctl_mspm0g1x0x_g3x0x.h for the DL_SYSCTL_* pre-fetch list, 108 deduped camelCase functions; hw register headers source/ti/devices/msp/peripherals/m0p/sysctl/). Two concurrency incidents during this run: (1) a peer session's unscoped `pdf_cleanup.py --orphans` deleted all 5 in-flight _PMCU_p*.txt chunk files mid-read (same bug as the ADC entry above) -- coordinated via SendMessage with the two live peer sessions (llm-wiki-fd, llm-wiki-c5; the latter confirmed it caused the purge and stopped), re-extracted and re-dispatched the affected chunks once; (2) chunks 4 and 5 then separately hit a session-wide API rate limit (HTTP 429), re-dispatched a third time after the limit reset per a system notification -- all retries were on changed external preconditions (peer stopped purging / limit reset), verified via `ls` before each redispatch, never a blind retry of the same failure. Adviser review (round 1, Claude) before finalizing caught a real content-accuracy issue: the pre-fetched DL_SYSCTL_* function list came only from the G1x0x_G3x0x variant header, but chunks 4/5 cover the SYSCTL_G511x_G5187 register bank (Sec 2.7) -- confirmed via direct `diff` against dl_sysctl_mspm0g511x.h that the API surface differs (G511x/G5187 adds USB FLL config, IP/Read-Execute Protect Firewall, Flash Bank Swap enable/disable, and renames getSRAMBoundaryAddress/setSRAMBoundaryAddress to getLowerSRAMBoundaryAddress/setLowerSRAMBoundaryAddress); chunk 4 had incorrectly reported \"no SDK function\" for the USBFLLCTL/ADJ/STAT registers -- corrected in note SS12 with a separate G511x/G5187-only API table. Also corrected: SDK example refs originally cited a generic L-series board (LP_MSPM0L1117, wrong chip family) -- replaced with confirmed G-series examples (LP_MSPM0G5187 exact-variant power_sequencing example, LP_MSPM0G3507 sysctl_power_policy_sleep_to_standby/sleep_to_stop driverlib examples). Also caught and fixed during this run: chunk-5 agent's own report only covered SS2.8.8/2.8.9 and silently omitted SS2.8.5's tail, SS2.8.6, and SS2.8.7 (High Speed Clock Handling in Low-Power Modes -- a materially important mechanism) despite them being in its 2-page source file; caught by reading the 2-page temp file directly rather than trusting the chunk summary, content added to note SS3.4/SS9/SS10/SS11 directly. Also fixed in this same registry write: MSPM0_TRM_ADC_slau846e.pdf's output_note pointed to the stale 專業領域/MSPM0/ path even though the note file itself was already relocated to 專業領域/MSPM0G/ by an earlier peer-session move."
+    },
+    "sffs700.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-28",
+      "output_note": "專業領域/F28P65x/TMS320F28P65x Functional Safety Manual (SFFS700) 規格書.md",
+      "source_pdf": "RAW/sffs700.pdf",
+      "chip": "TMS320F28P65x (C2000)",
+      "pages_analyzed": "1-142 (standalone, 3 chunks: p1-60/p61-120/p121-142, parallel chunk-agents + orchestrator synthesis)",
+      "flags": "Reclassified doc-type from auto-detected default 'paper' to 'spec' -- content is a normative reference/lookup document (safety-mechanism catalog + ~400-row Table A-2 diagnostic table), not an academic paper or SDK-porting appnote; -N flag, no SDK lookup performed"
+    },
+    "sprace5a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-28",
+      "output_note": "專業領域/C2000/DCAN 模組程式範例與除錯策略分析 (SPRACE5A).md",
+      "source_pdf": "RAW/sprace5a.pdf",
+      "chip": "C2000 (DCAN peripheral on TMS320F2837xD/S, TMS320F2807x, TMS320F28004x, TMS320F28002x; examples tested on TMS320F28379D)",
+      "pages_analyzed": "1-17 (standalone appnote, 1 chunk, inline)",
+      "flags": "SDK context from C2000Ware_26_01_00_00 f2837xd driverlib/examples/cpu1/can; confirmed CAN_setupMessageObject/CAN_sendMessage/CAN_setBitRate/CAN_setBitTiming/GPIO_setPinConfig signatures and all 8 DEVICE_GPIO_CFG_CANxx pin_map.h pinConfig values (GPIO_30_CANRXA=0x00081C01U etc.) match document Table 4-1/§4.1.1 exactly; noted current SDK examples have migrated to SysConfig-generated Board_init()/.syscfg msgObj setup vs. the document's manual device.h-edit pattern (SDK-generation gap, not a document error) -- flagged inline in §4 rather than silently ignored"
+    },
+    "spracs0a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-28",
+      "output_note": "專業領域/C2000/CLA 獨特能力軟體範例分析 (SPRACS0A).md",
+      "source_pdf": "RAW/spracs0a.pdf",
+      "chip": "C2000 (example projects under C2000Ware driverlib/f28004x/examples/cla; ref[1] TMS320F28004x TRM, ref[4] TMS320F2838x datasheet for Type 5 ADC early-interrupt offset)",
+      "pages_analyzed": "1-16 (standalone appnote, 1 chunk, inline)",
+      "flags": "SDK context from C2000Ware_26_01_00_00 f28004x driverlib; confirmed all 4 named example projects (cla_ex4_pwm_control/cla_ex5_adc_just_in_time/cla_ex6_cpu_offloading/cla_ex7_shared_resource_handling) exist and confirmed EPWM_setCounterCompareValue, EPWM_clearEventTriggerInterruptFlag, ADC_setInterruptPulseMode, ADC_setInterruptCycleOffset, and DCL_runPID_L1/L2/DCL_runPI_L1/DCL_runDF13_L1-3 signatures match the document's code snippets and Table 4-1 cycle counts"
+    },
+    "sprad88a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-28",
+      "output_note": "專業領域/C2000/8-Bit 轉 C28x 16-Bit 定址架構軟體移植指南 (SPRAD88A).md",
+      "source_pdf": "RAW/sprad88a.pdf",
+      "chip": "C2000 / TMS320C28x (generic architecture note, no specific device; comparison target is Arm 8-bit addressable CPUs)",
+      "pages_analyzed": "1-8 (standalone appnote, 1 chunk, inline)",
+      "flags": "Compiler/data-type porting note, not a HW reference design -- 系統架構/實測結果 sections thin per template rule (no BOM, no measured results in source). SDK verification: confirmed C2000Ware's `typedef uint16_t uint8_t;` remap in driverlib/f28p65x/.../hw_types.h:109 (and other device folders) matches the document's claim; confirmed `__byte()` intrinsic usage in driverlib/f28p65x/driverlib/pmbus.c:515-521"
+    },
+    "sprad55a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-28",
+      "output_note": "專業領域/C2000/ADC Oversampling 過採樣提升解析度分析 (SPRAD55A).md",
+      "source_pdf": "RAW/sprad55a.pdf",
+      "chip": "C2000 (tested on TMDSCNCD28P65X controlCARD / TMS320F28P65x; ISR code example labeled for F28003x SOC15)",
+      "pages_analyzed": "1-19 (standalone appnote, 1 chunk, inline)",
+      "flags": "SDK context from C2000Ware_26_01_00_00 driverlib/f28p65x; direct hit examples adc_ex12_burst_mode_oversampling.c (software path) and adc_ex15_trigger_repeater_oversampling.c (hardware/PPB-sum path) match the document's two methods almost line-for-line"
+    },
+    "spraby3.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-28",
+      "output_note": "專業領域/Reliability/Mission Profile FIT 可靠度計算方法分析 (SPRABY3).md",
+      "source_pdf": "RAW/spraby3.pdf",
+      "chip": "N/A — reliability/FIT-MTTF calculation methodology app note (Allan Webber, 2015); example figures reference TMS320F28335 and MSP430F5438AIPZ but method is chip-agnostic",
+      "pages_analyzed": "1-7 (standalone appnote, 1 chunk, inline, -N no-SDK)",
+      "flags": "-N; new topic subfolder 'Reliability' created (no existing vault folder fit FIT/MTTF/JESD85 content); §4 軟體實作與SDK對應 omitted per template rule (zero software content); Eq.1-3 (p.4-5) had PDF-text-extraction artifacts (broken fraction/exponent layout) -- reconstructed from extracted variable names + given numeric results (AF=78.6, FIT=50.9) against the standard JESD85 Arrhenius/chi-square formulas, flagged inline with a callout rather than silently presented as verbatim transcription"
+    },
+    "1.2_Datasheet IS21_22EF08G_16G_Rev A5_1105_2024.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-25",
+      "output_note": "專業領域/Flash Memory/IS21_22EF08G_16G eMMC 資料表分析 (Rev A5).md",
+      "source_pdf": "RAW/1.2_Datasheet IS21_22EF08G_16G_Rev A5_1105_2024.pdf",
+      "chip": "N/A — ISSI IS21/22EF08G/16G (8GB/16GB eMMC, MLC NAND + eMMC 5.1 controller); not a TI part, no matching chip-family in skill's SDK table",
+      "pages_analyzed": "1-54 (standalone datasheet, 1 chunk, inline, -N no-SDK)",
+      "flags": "Invoked without '@' prefix (filename given directly, no batch folder scan intended) -- treated as single-file standalone since the arg resolves to one existing file, not a directory. Doc type auto-detect table has no vendor-datasheet category (only trm/appnote/paper/spec); chose trm template (register-centric, degrades cleanly with SDK=N/A) over paper/spec since content is register+timing+pin reference, not experiments or a vendor-neutral protocol standard. Placed in existing 'Flash Memory' vault subfolder (topic-based, not chip-family-based) rather than 未分類/."
+    },
+    "1-s2.0-S2214914723002155-main.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-19",
+      "output_note": "專業領域/Motor_Control/HFI/Filterless SDFT Demodulation for HF Pulsating Voltage Injection IPD 論文分析 (Defence Technology 2024).md",
+      "source_pdf": "RAW/1-s2.0-S2214914723002155-main.pdf",
+      "chip": "N/A — Jiang & Cheng, Defence Technology 33 (2024) 19-29 (SDFT filterless demodulation + area-integral polarity judgment for HF pulsating voltage injection IPD, PMSM; evaluated on TMS320F28377D)",
+      "pages_analyzed": "1-11 (standalone paper, 1 chunk, inline, -N no-SDK)",
+      "flags": "-N; several equations show PDF-text-extraction artifacts (broken sqrt/fraction layout, one ms/μs unit ambiguity in Fig.11 discussion) -- flagged inline in note rather than silently reconstructed"
+    },
+    "spraco3.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-17",
+      "output_note": "專業領域/F28P55x/Dual-Axis FCL 與 SFRA 雙軸馬達控制設計指南分析 (SPRACO3).md",
+      "source_pdf": "RAW/spraco3.pdf",
+      "chip": "TMS320F2837x/TMS320F28004x (document-native); cross-referenced against TMS320F28P55x project dual_axis_servo_drive_fcl_qep_f28p55x (branch main) which already carries a ported FCL/SFRA library targeting F28P55x/F28P65x",
+      "pages_analyzed": "1-56 (standalone appnote, 1 chunk, inline). User pointed SDK lookup at project dual_axis_servo_drive_fcl_qep_f28p55x branch main instead of generic C2000Ware driverlib -- Step 1.5 done via git grep against that repo's libraries/fcl, libraries/sfra, libraries/position_sensing/qep and headers/*.h on branch main (repo had uncommitted local changes on a different checked-out branch, so read via `git grep <pattern> main -- <path>` / `git show main:<path>` without touching the working tree)."
+    },
+    "sprz572b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-15",
+      "output_note": "專業領域/F28P55x/F28P55x Silicon Errata 勘誤分析 (SPRZ572B).md",
+      "source_pdf": "RAW/sprz572b.pdf",
+      "chip": "TMS320F28P55x family (C2000): TMS320F28P550SJ/SG, TMS320F28P559SJ/SG-Q1",
+      "pages_analyzed": "1-34 (standalone, 1 chunk, inline). Doc type auto-detect gave 'paper' by filename (sprz prefix not in trm/appnote table); manually overridden to appnote-adapted structure since content is silicon errata (advisory list + workarounds), not academic paper — appnote's 踩坑清單/關鍵暫存器 sections fit directly, 系統架構/設計方法詳解/實測結果 repurposed as revision-identification/per-advisory-detail/impact-matrix. SDK context from C2000Ware_26_01_00_00 (26_00_00_00 in skill table is stale) f28p55x driverlib.",
+      "flags": "sprz* filename prefix not covered by skill's Step 0 doc-type table (spru=trm, spra/slaa/etc=appnote) — defaulted to paper then manually reclassified; consider adding sprz->errata or sprz->appnote mapping to skill table if more silicon errata docs get analyzed"
+    },
+    "slla383a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-15",
+      "output_note": "專業領域/Networking/LIN Protocol and Physical Layer Requirements (SLLA383A).md",
+      "source_pdf": "RAW/slla383a.pdf",
+      "chip": "N/A (transceiver/vendor-agnostic protocol + physical layer appnote; example figure cites TLIN1029-Q1)",
+      "pages_analyzed": "1-14 (standalone appnote, 1 chunk, inline, -N-equivalent: no chip identifier in filename so SDK lookup resolved to N/A automatically)"
+    },
+    "F28P55x_TRM_USB_spruj53d.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-15",
+      "output_note": "專業領域/F28P55x/USB模組分析 (SPRUJ53D).md",
+      "source_pdf": "RAW/spruj53d.pdf",
+      "module": "USB (Universal Serial Bus Controller)",
+      "chip": "TMS320F28P55x (C2000)",
+      "pages_analyzed": "2884-3067 (Chapter 24 Universal Serial Bus (USB) Controller 全章, 4 parallel chunk-agents: 2884-2943/2944-3003/3004-3063/3064-3067), SDK context from C2000Ware_26_01_00_00 f28p55x driverlib + libraries/communications/usb/f28p55x usblib stack (examples/usb/*.c only call higher-level usblib API, not low-level driverlib — cited usblib stack source instead, confirmed via grep)"
+    },
+    "spradk2a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-12",
+      "output_note": "專業領域/C29x/SSU執行期安全與資安實作 (SPRADK2A).md",
+      "source_pdf": "RAW/spradk2a.pdf",
+      "chip": "C29x / F29H85x family (F29 SDK + SysConfig support all F29x platform devices, incl. F29P58x/F29P32x)",
+      "pages_analyzed": "1-25 (standalone appnote, 1 chunk, inline, SDK context from f29h85x-sdk_26_00_00_00)",
+      "flags": "companion to existing TRM note 專業領域/C29x/SSU模組分析 (SPRUJ79B).md — this note covers SysConfig application-note methodology/porting angle, TRM note covers register-level detail"
+    },
+    "F29H85x_TRM_SENT_spruj79b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-12",
+      "output_note": "專業領域/C29x/SENT模組分析 (SPRUJ79B).md",
+      "source_pdf": "RAW/spruj79b.pdf",
+      "module": "SENT",
+      "chip": "F29H85x, F29P58x, F29P32x (C29x)",
+      "pages_analyzed": "5060-5198 (Chapter 38 Single Edge Nibble Transmission); 3 parallel chunk-agents (5060-5119/5120-5179/5180-5198), SDK context from f29h85x-sdk_26_00_00_00"
+    },
+    "TITune - User Guide.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-10",
+      "output_note": "專業領域/Motor_Control/TiTune/TI Tune 馬達參數辨識使用手冊分析 (TITune).md",
+      "source_pdf": "RAW/TITune - User Guide.pdf",
+      "chip": "N/A — TI internal TiTune library (PMSM motor parameter identification), no chip named; API naming consistent with C2000 MotorControl SDK style",
+      "pages_analyzed": "1-20 (standalone, 1 chunk, inline, -N no-SDK)",
+      "flags": "-N; filename has no TI doc-ID, default auto-detect would be 'paper' — overridden to appnote since content is a practical tool/library user guide (architecture, migration steps, PI tuning formulas), not an academic paper"
+    },
+    "spruir8b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-06",
+      "output_note": "專業領域/C2000/CLB Tool（SysConfig 配置工具）使用指南分析 (SPRUIR8B).md",
+      "source_pdf": "RAW/spruir8b.pdf",
+      "chip": "C2000 (applicable to all devices with CLB hardware; examples shown for F2837xD/F28003x/F2838x)",
+      "pages_analyzed": "1-46 (standalone, 1 chunk, inline, read via PDF pages tool)",
+      "flags": "type override: filename prefix 'spru' auto-detects trm, but content is a SysConfig tool user's guide (no register/bit-field content) — analyzed with appnote template instead; SDK cross-ref against C2000Ware_26_01_00_00 f2838x clb examples (clb_ex1..clb_ex32, exact 1:1 match with doc's example list)"
+    },
+    "sprad12a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-06",
+      "output_note": "專業領域/C2000/C2000 ePWM Developer's Guide — SysConfig 設定分析 (SPRAD12A).md",
+      "source_pdf": "RAW/sprad12a.pdf",
+      "chip": "C2000 (TMS320F28388D, applicable to all Type-4 ePWM devices)",
+      "pages_analyzed": "1-26 (standalone app note, 1 chunk, inline, read via PDF pages tool)",
+      "flags": "user-directed focus: SysConfig GUI/.syscfg property usage over driverlib API enumeration; SDK cross-ref against C2000Ware_26_01_00_00 f2838x epwm examples (epwm_ex14_global_load_use_case matches doc's use-case)"
+    },
+    "ethercat_et1100_datasheet_v2i1.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-03",
+      "output_note": "專業領域/Networking/EtherCAT/ET1100 ESC 完整分析.md",
+      "source_pdf": "RAW/ethercat_et1100_datasheet_v2i1.pdf",
+      "chip": "ET1100-0003 — EtherCAT ESC; SDK lookup skipped by -N",
+      "pages_analyzed": "1-124 (standalone, 3 chunks, datasheet engineering review)",
+      "flags": "-N; auto-detected paper by filename, treated as datasheet engineering record"
+    },
+    "ethercat_diagnosis_for_users.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-03",
+      "output_note": "專業領域/Networking/EtherCAT/EtherCAT Diagnostic 使用者診斷指南分析 (ETG 2018).md",
+      "source_pdf": "RAW/ethercat_diagnosis_for_users.pdf",
+      "chip": "N/A — EtherCAT Technology Group end-user diagnostic guide (protocol-level, no chip/SDK); type auto-detect defaulted to 'paper' but overridden to 'appnote' since content is a practical diagnostic guide, not an academic paper",
+      "pages_analyzed": "1-38 (standalone, 1 chunk, inline, -N no-SDK)",
+      "flags": "-N"
+    },
+    "react_2210.03629.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-12",
+      "output_note": "AI學習/awesome_agent_arch/ReAct 論文分析.md",
+      "source_pdf": "RAW/react_2210.03629.pdf",
+      "chip": "N/A — LLM agent harness paper (ReAct reasoning+acting loop), no chip/SDK",
+      "pages_analyzed": "1-33 (standalone paper, 1 chunk, spawned worker agent, -N no-SDK)",
+      "flags": "-N"
+    },
+    "toolformer_2302.04761.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-12",
+      "output_note": "AI學習/awesome_agent_arch/Toolformer 論文分析.md",
+      "source_pdf": "RAW/toolformer_2302.04761.pdf",
+      "chip": "N/A — LLM tool-use paper, no chip/SDK",
+      "pages_analyzed": "1-17 (standalone paper, 1 chunk, spawned worker agent, -N no-SDK)",
+      "flags": "-N"
+    },
+    "voyager_2305.16291.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-12",
+      "output_note": "AI學習/awesome_agent_arch/Voyager 論文分析.md",
+      "source_pdf": "RAW/voyager_2305.16291.pdf",
+      "chip": "N/A — LLM embodied-agent skill-library/memory paper, no chip/SDK",
+      "pages_analyzed": "1-42 (standalone paper, 1 chunk, spawned worker agent, -N no-SDK)",
+      "flags": "-N"
+    },
+    "reflexion_2303.11366.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-12",
+      "output_note": "AI學習/awesome_agent_arch/Reflexion 論文分析.md",
+      "source_pdf": "RAW/reflexion_2303.11366.pdf",
+      "chip": "N/A — LLM self-correction/verbal-RL paper, no chip/SDK",
+      "pages_analyzed": "1-19 (standalone paper, 1 chunk, spawned worker agent, -N no-SDK)",
+      "flags": "-N"
+    },
+    "swe-agent_2405.15793.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-12",
+      "output_note": "AI學習/awesome_agent_arch/SWE-agent 論文分析.md",
+      "source_pdf": "RAW/swe-agent_2405.15793.pdf",
+      "chip": "N/A — LLM coding-agent Agent-Computer Interface (ACI) paper, no chip/SDK",
+      "pages_analyzed": "1-118 (standalone paper, 2 chunks p1-60/p61-118, parallel chunk-agents, orchestrator synthesized, -N no-SDK)",
+      "flags": "-N"
+    },
+    "tiduak1.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-05",
+      "output_note": "專業領域/Motor_Control/Drone/高功率無刷DC螺旋槳ESC參考設計 (TIDUAK1).md",
+      "source_pdf": "RAW/tiduak1.pdf",
+      "chip": "C2000 TMS320F28027F — TI Design TIDA-00643 High-Performance BLDC Propeller Controller (InstaSPIN-FOC + FAST via MotorWare + DRV8305 + 6× CSD17573Q5B); no driverlib graphify index (MotorWare-based, MCP unloaded)",
+      "pages_analyzed": "1-43 (standalone reference design, 1 chunk, inline, -N no-SDK)",
+      "flags": "-N"
+    },
+    "tiducf1.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-05",
+      "output_note": "專業領域/Motor_Control/Drone/高速無感測FOC無人機ESC參考設計 (TIDUCF1).md",
+      "source_pdf": "RAW/tiducf1.pdf",
+      "chip": "N/A — TI Design TIDA-00916 High-Speed Sensorless-FOC for Drone ESCs (InstaSPIN-FOC + FAST on C2000 TMS320F28069M + DRV8305, MotorWare); no driverlib graphify index",
+      "pages_analyzed": "1-27 (standalone reference design, 1 chunk, inline, -N no-SDK)",
+      "flags": "-N"
+    },
+    "tiduce8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-01",
+      "output_note": "專業領域/Motor_Control/CurrentSensing/TIDA-00913 48V三相GaN逆變器精密相電流感測參考設計分析 (TIDUCE8A).md",
+      "source_pdf": "RAW/tiduce8.pdf",
+      "chip": "N/A — TI Design TIDA-00913 reference design (INA240 + LMG5200 GaN inverter), no driverlib; evaluated with C2000 TMS320F28069M LaunchPad",
+      "pages_analyzed": "1-45 (standalone reference design guide, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "ssztan8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-01",
+      "output_note": "專業領域/Motor_Control/CurrentSensing/Five Benefits of Enhanced PWM Rejection for In-line Motor Control (SSZTAN8).md",
+      "source_pdf": "RAW/ssztan8.pdf",
+      "chip": "N/A — TI Technical Article (Manny Soltero), INA240 in-line current-sense amplifier / Enhanced PWM Rejection concept article, no driverlib",
+      "pages_analyzed": "1-5 (standalone technical article, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "infineon-designing-with-power-mosfets-applicationnotes-en.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-29",
+      "output_note": "專業領域/Gate_Drivers/Designing with power MOSFETs — 常見問題與失效模式 (AN_2112).md",
+      "source_pdf": "RAW/infineon-designing-with-power-mosfets-applicationnotes-en.pdf",
+      "chip": "N/A — Infineon AN_2112_PL18 (Peter B. Green), Designing with power MOSFETs: common issues & failure modes (device/circuit design app note, no driverlib)",
+      "pages_analyzed": "1-27 (standalone app note, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "infineon-power-mosfet-basics-article-en.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-29",
+      "output_note": "專業領域/Gate_Drivers/Power MOSFET Basics — 元件物理與參數 (Barkhordarian-IR).md",
+      "source_pdf": "RAW/infineon-power-mosfet-basics-article-en.pdf",
+      "chip": "N/A — Barkhordarian (IR/Infineon), Power MOSFET Basics (device-physics article, no driverlib)",
+      "pages_analyzed": "1-13 (standalone article, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "slua618a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-29",
+      "output_note": "專業領域/Gate_Drivers/MOSFET 與 IGBT 閘極驅動電路基礎 (SLUA618A).md",
+      "source_pdf": "RAW/slua618a.pdf",
+      "chip": "N/A — Balogh, Fundamentals of MOSFET and IGBT Gate Driver Circuits (analog app report, no driverlib)",
+      "pages_analyzed": "1-48 (standalone app note, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "sbaa698a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-25",
+      "output_note": "專業領域/Gate_Drivers/閘極驅動器 Slew Rate 控制、MOSFET 切換最佳化與保護特性 (SBAA698A).md",
+      "source_pdf": "RAW/sbaa698a.pdf",
+      "chip": "TI Motor Driver gate driver portfolio (DRV8xxx / DRV32xx; BDC/Stepper + BLDC)",
+      "pages_analyzed": "1-10 (standalone application brief, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "slva714d.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-24",
+      "output_note": "專業領域/Gate_Drivers/Smart Gate Drive 智慧閘極驅動技術解析 (SLVA714D).md",
+      "source_pdf": "RAW/slva714d.pdf",
+      "chip": "TI Smart Gate Driver family (DRV8701 / DRV8718-Q1 / DRV8714-Q1; example MOSFET CSD18532Q5B)",
+      "pages_analyzed": "1-24 (standalone app note, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "sprabq7a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-19",
+      "output_note": "專業領域/Motor_Control/IPD/馬達初始位置偵測 (IPD)：TI 五篇應用筆記彙整.md",
+      "source_pdf": "RAW/sprabq7a.pdf",
+      "chip": "C2000 TMS320F2803x — Sensorless Trapezoidal Control of BLDC (forced-commutation startup baseline)",
+      "pages_analyzed": "1-41 (consolidated IPD note, -N no-SDK)",
+      "flags": "-N (consolidated 5-doc IPD note)"
+    },
+    "slla575.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-19",
+      "output_note": "專業領域/Motor_Control/IPD/馬達初始位置偵測 (IPD)：TI 五篇應用筆記彙整.md",
+      "source_pdf": "RAW/slla575.pdf",
+      "chip": "MCF8316A — Design Challenges & Solution (Align / IPD / Slow first cycle startup)",
+      "pages_analyzed": "1-13 (consolidated IPD note, -N no-SDK)",
+      "flags": "-N (consolidated 5-doc IPD note)"
+    },
+    "slou426a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-19",
+      "output_note": "專業領域/Motor_Control/IPD/馬達初始位置偵測 (IPD)：TI 五篇應用筆記彙整.md",
+      "source_pdf": "RAW/slou426a.pdf",
+      "chip": "DRV10983x/DRV10975x/DRV10987 — IPD Tuning Guide (inductive-sense IPD suitability check + full tuning procedure)",
+      "pages_analyzed": "1-25 (consolidated IPD note, -N no-SDK; replaced slaa561 lead-angle doc)",
+      "flags": "-N (consolidated 5-doc IPD note)"
+    },
+    "ssztcs2.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-19",
+      "output_note": "專業領域/Motor_Control/IPD/馬達初始位置偵測 (IPD)：TI 五篇應用筆記彙整.md",
+      "source_pdf": "RAW/ssztcs2.pdf",
+      "chip": "C2000 InstaSPIN-FOC — Motor Start-up Techniques Part One (ForceAngle)",
+      "pages_analyzed": "1-3 (consolidated IPD note, -N no-SDK)",
+      "flags": "-N (consolidated 5-doc IPD note)"
+    },
+    "ssztcj7.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-19",
+      "output_note": "專業領域/Motor_Control/IPD/馬達初始位置偵測 (IPD)：TI 五篇應用筆記彙整.md",
+      "source_pdf": "RAW/ssztcj7.pdf",
+      "chip": "C2000 InstaSPIN-FOC — Motor Start-up Techniques Part Three (IPD_HFI + AFSEL)",
+      "pages_analyzed": "1-5 (consolidated IPD note, -N no-SDK)",
+      "flags": "-N (consolidated 5-doc IPD note)"
+    },
+    "energies-13-05991.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-19",
+      "output_note": "專業領域/Motor_Control/SMO/STA-SMO + APEC IPMSM Sensorless 論文分析 (Energies 2020, 13-5991).md",
+      "source_pdf": "RAW/energies-13-05991.pdf",
+      "chip": "N/A — Liu et al. Energies 2020, 13, 5991 (STA-SMO + APEC sensorless IPMSM, SMO P3)",
+      "pages_analyzed": "1-18 (standalone, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "applsci-15-11206.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-19",
+      "output_note": "專業領域/Motor_Control/SMO/Adaptive-Gain NTSMO PMSM Sensorless 論文分析 (Appl. Sci. 2025, 15-11206).md",
+      "source_pdf": "RAW/applsci-15-11206.pdf",
+      "chip": "N/A — Sohel et al. Appl. Sci. 2025, 15, 11206 (adaptive-gain NTSMO sensorless PMSM air compressor, TMS320F28379D, SMO P4)",
+      "pages_analyzed": "1-18 (standalone, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "Sensorless_Control_of_PMSM_With_Improved_Adaptive_Super-Twisting_Sliding_Mode_Observer_and_IST-QSG.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-19",
+      "output_note": "專業領域/Motor_Control/SMO/IAST-SMO + IST-QSG PMSM Sensorless 論文分析 (IEEE TTE 2025, 11-1-721).md",
+      "source_pdf": "RAW/Sensorless_Control_of_PMSM_With_Improved_Adaptive_Super-Twisting_Sliding_Mode_Observer_and_IST-QSG.pdf",
+      "chip": "N/A — Wang & Liu, IEEE TTE 2025 11(1):721 (IAST-SMO + IST-QSG sensorless PMSM SOTA, SMO P5)",
+      "pages_analyzed": "1-11 (standalone, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "SMO_P1_arxiv_2510.18420_PMSM_SMC_review.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-19",
+      "output_note": "專業領域/Motor_Control/SMO/SMC for PMSM 控制策略綜述 (arXiv 2510.18420).md",
+      "source_pdf": "RAW/SMO_P1_arxiv_2510.18420_PMSM_SMC_review.pdf",
+      "chip": "N/A — Ajasa et al. arXiv:2510.18420v1 (SMC for PMSM speed control review/taxonomy, SMO P1)",
+      "pages_analyzed": "1-30 (standalone, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "BangBang_Charge_Control_LLC_Hu_2015.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-18",
+      "output_note": "專業領域/Power/LLC/Bang-Bang Charge Control (BBCC) for LLC 分析 (Hu ECCE2013).md",
+      "source_pdf": "RAW/BangBang_Charge_Control_LLC_Hu_2015.pdf",
+      "chip": "N/A — Hu et al. ECCE2013 / IEEE TPEL 30(2) 2015 (LLC charge control, dsPIC33F + Altera MAX II CPLD)",
+      "pages_analyzed": "1-7 (standalone, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "infineon-design-example-resonant-llc-converter-operation-and-design-applicationnotes-en.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-18",
+      "output_note": "專業領域/Power/LLC/Resonant LLC Converter 操作與設計 (AN2012-09).md",
+      "source_pdf": "RAW/infineon-design-example-resonant-llc-converter-operation-and-design-applicationnotes-en.pdf",
+      "module": null,
+      "chip": "N/A — Infineon LLC app note (250W 33Vin 400Vout, ICE2HS01G)",
+      "pages_analyzed": "1-19 (standalone, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "An_LLC_Resonant_Converter_With_Symmetric_Pulse-Width_Balancing_and_Fixed-Period_Hysteresis_Burst_Control_for_High_Efficiency_Over_Full_Load_Range.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-18",
+      "output_note": "專業領域/Power/LLC/LLC諧振轉換器控制器 SPB+FPHC+ULPM 分析 (TPEL2025).md",
+      "source_pdf": "RAW/An_LLC_Resonant_Converter_With_Symmetric_Pulse-Width_Balancing_and_Fixed-Period_Hysteresis_Burst_Control_for_High_Efficiency_Over_Full_Load_Range.pdf",
+      "chip": "N/A — IEEE TPEL 2025 academic paper (analog LLC controller IC, 0.35um CMOS)",
+      "pages_analyzed": "1-13 (standalone, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "am13e23019.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-18",
+      "output_note": "專業領域/AM13Ex/AM13E230x Microcontrollers 資料手冊分析 (SPRSPC3).md",
+      "source_pdf": "RAW/am13e23019.pdf",
+      "module": "Full datasheet (cores, memory, peripherals, electrical specs, pin/package, nomenclature)",
+      "chip": "AM13E230x (AM13E23019 / AM13E23018 / AM13E23017)",
+      "pages_analyzed": "1-148 (standalone, 3 chunks, -N no-SDK)",
+      "flags": "-N"
+    },
+    "sprz578a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-17",
+      "output_note": "專業領域/AM275x/AM275x Silicon Errata 勘誤分析 (SPRZ578A).md",
+      "source_pdf": "RAW/sprz578a.pdf",
+      "module": "Silicon Errata (3 usage notes + 22 advisories, Silicon Rev 1.0)",
+      "chip": "AM275x",
+      "pages_analyzed": "1-17 (standalone, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "am2754-q1.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-17",
+      "output_note": "專業領域/AM275x/AM275x Signal Processing MCU 資料手冊分析 (SPRSPB0B).md",
+      "source_pdf": "RAW/am2754-q1.pdf",
+      "module": "Full datasheet (cores, memory, peripherals, electrical specs, package)",
+      "chip": "AM275x (AM2754-Q1 / AM2752-Q1)",
+      "pages_analyzed": "1-167 (standalone, 3 chunks, -N no-SDK)"
+    },
+    "M-CRPS_chap12_M-CRPS_Base_Specification_version_1p06p00_RC1.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-16",
+      "output_note": "專業領域/M-CRPS/M-CRPS Firmware Requirements 模組分析 (第12章).md",
+      "source_pdf": "RAW/M-CRPS_Base_Specification_version_1p06p00_RC1-draft7_042026_1.pdf",
+      "module": "Chapter 12 Firmware Requirements (PMBus / SMBAlert# / Cold Redundancy / In-System FW Upload / Black Box / DSSI / Config File / Security)",
+      "chip": "N/A — OCP M-CRPS power supply spec (non-TI)",
+      "pages_analyzed": "147-246 (module mode, 2 chunks, -N no-SDK)"
+    },
+    "spradp8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-15",
+      "output_note": "專業領域/C2000/How to Debug Interrupt Abnormalities 中斷異常除錯 (SPRADP8).md",
+      "source_pdf": "RAW/spradp8.pdf",
+      "module": "Interrupt Debug (PIE / nesting / RPT)",
+      "chip": "C2000 (C28x F280039C / C29x F29H85x)",
+      "pages_analyzed": "1-14 (整篇 application brief, standalone, 1 chunk, -N no-SDK)"
+    },
+    "spruiu9c.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-15",
+      "output_note": "專業領域/C2000/Live Firmware Update 不重置韌體更新 (SPRUIU9C).md",
+      "source_pdf": "RAW/spruiu9c.pdf",
+      "module": "LFU (Live Firmware Update)",
+      "chip": "C2000 (F28003x/F28P55x)",
+      "pages_analyzed": "1-11 (整篇 application note, standalone, 1 chunk)"
+    },
+    "AM261x_TRM_GPMC_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-14",
+      "output_note": "專業領域/AM261x/GPMC模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "GPMC",
+      "chip": "AM261x",
+      "pages_analyzed": "1390-1500 (§13.3.1 General-Purpose Memory Controller 全章, 2 chunks)"
+    },
+    "AM261x_TRM_I2C_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-14",
+      "output_note": "專業領域/AM261x/I2C模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "I2C",
+      "chip": "AM261x",
+      "pages_analyzed": "1140-1156 (§13.1.2 全章, 1 chunk)"
+    },
+    "AM261x_TRM_UART_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-14",
+      "output_note": "專業領域/AM261x/UART模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "UART",
+      "chip": "AM261x",
+      "pages_analyzed": "1202-1267 (§13.1.4 全章, 2 chunks)"
+    },
+    "AM261x_TRM_ELM_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-14",
+      "output_note": "專業領域/AM261x/ELM模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "ELM",
+      "chip": "AM261x",
+      "pages_analyzed": "1501-1512 (§13.3.2 全章, 1 chunk)"
+    },
+    "AM261x_TRM_HSM_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-14",
+      "output_note": "專業領域/AM261x/HSM模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "HSM",
+      "chip": "AM261x",
+      "pages_analyzed": "493-596 (§7.4 Hardware Security Module 全章, 2 chunks)"
+    },
+    "AM261x_TRM_MCAN_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-14",
+      "output_note": "專業領域/AM261x/MCAN模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "MCAN",
+      "chip": "AM261x",
+      "pages_analyzed": "1628-1669 (§13.4.1 全章, 1 chunk)"
+    },
+    "AM261x_TRM_LIN_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-14",
+      "output_note": "專業領域/AM261x/LIN模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "LIN",
+      "chip": "AM261x",
+      "pages_analyzed": "1670-1718 (§13.4.2 全章, 1 chunk)"
+    },
+    "AM261x_TRM_FSI_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-14",
+      "output_note": "專業領域/AM261x/FSI模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "FSI",
+      "chip": "AM261x",
+      "pages_analyzed": "889-927 (§7.5.8 全章, 1 chunk)"
+    },
+    "AM261x_TRM_XBAR_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-12",
+      "output_note": "專業領域/AM261x/XBAR模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "XBAR",
+      "chip": "AM261x",
+      "pages_analyzed": "956-973 (§7.5.10 全章)"
+    },
+    "C28x_CPU_CentralProcessingUnit_spru430f.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-10",
+      "output_note": "專業領域/C28x/Central Processing Unit模組分析 (SPRU430F).md",
+      "source_pdf": "RAW/spru430f.pdf",
+      "module": "Central Processing Unit",
+      "chip": "C28x",
+      "pages_analyzed": "20-51 (Chapter 2)",
+      "flags": "-N"
+    },
+    "AM261x_TRM_PRUICSS_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-12",
+      "output_note": "專業領域/AM261x/PRU-ICSS模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "PRU-ICSS",
+      "chip": "AM261x",
+      "pages_analyzed": "345-492 (§7.3 全章, 3 chunks)"
+    },
+    "AM261x_TRM_Initialization_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-11",
+      "output_note": "專業領域/AM261x/Initialization模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "Initialization",
+      "chip": "AM261x",
+      "pages_analyzed": "162-206 (Chapter 5 Initialization 全章)"
+    },
+    "C28x_CPU_EmulationFeatures_spru430f.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-10",
+      "output_note": "專業領域/C28x/Emulation Features模組分析 (SPRU430F).md",
+      "source_pdf": "RAW/spru430f.pdf",
+      "module": "Emulation Features",
+      "chip": "C28x",
+      "pages_analyzed": "473-489 (Chapter 7)",
+      "flags": "-N"
+    },
+    "C28x_CPU_AssemblyInstructions_spru430f.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/C28x/Assembly Language Instructions模組分析 (SPRU430F).md",
+      "analyzed_date": "2026-06-10",
+      "source_pdf": "RAW/spru430f.pdf",
+      "module": "C28x Assembly Language Instructions",
+      "chip": "C28x",
+      "pages_analyzed": "107-146 詳讀 (§6.1-6.2 + 條目格式); 147-472 為逐指令字典 (bulk dump, 未展開); -N 模式",
+      "flags": "-N"
+    },
+    "C28x_CPU_AddressingModes_spru430f.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-10",
+      "output_note": "專業領域/C28x/Addressing Modes模組分析 (SPRU430F).md",
+      "source_pdf": "RAW/spru430f.pdf",
+      "module": "C28x Addressing Modes",
+      "chip": "C28x",
+      "pages_analyzed": "79-106 (Chapter 5)",
+      "flags": "-N"
+    },
+    "C28x_CPU_Pipeline_spru430f.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/C28x/Pipeline模組分析 (SPRU430F).md",
+      "analyzed_date": "2026-06-10",
+      "source_pdf": "RAW/spru430f.pdf",
+      "module": "Pipeline",
+      "chip": "C28x",
+      "pages_analyzed": "67-78 (Chapter 4 Pipeline); -N 模式（無 SDK 查詢）"
+    },
+    "F28P55x_TRM_CpuTimers_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/32-Bit CPU Timers 0-1-2 模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-09",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "32-Bit CPU Timers 0/1/2",
+      "chip": "F28P55x",
+      "pages_analyzed": "128-129 (§3.8 CPU Timers); 屬 Chapter 3 System Control"
+    },
+    "F28P55x_TRM_Interrupts_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/Peripheral Interrupts 與 NMI (ePIE) 模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-09",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "Peripheral Interrupts and NMI",
+      "chip": "F28P55x",
+      "pages_analyzed": "99-114 (§3.5 Peripheral Interrupts + §3.6 Exceptions/NMI); 屬 Chapter 3 System Control"
+    },
+    "F28P55x_TRM_Resets_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/Resets 模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-09",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "Resets",
+      "chip": "F28P55x",
+      "pages_analyzed": "96-98 (§3.4 Resets); 屬 Chapter 3 System Control"
+    },
+    "F28P55x_TRM_PowerManagement_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/Power Management 與 Low-Power Modes 模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-09",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "Power Management",
+      "chip": "F28P55x",
+      "pages_analyzed": "96 (§3.2 VREG) + 133-135 (§3.10 Low-Power Modes); 屬 Chapter 3 System Control"
+    },
+    "F28P55x_TRM_EPG_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/EPG模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-09",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "EPG",
+      "chip": "F28P55x",
+      "pages_analyzed": "3532-3549 (功能段; 暫存器段 3549-3597 為 bulk dump)"
+    },
+    "F28P55x_TRM_ROMBoot_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/ROM Code 與 Peripheral Booting 模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-09",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "ROM Code and Peripheral Booting",
+      "chip": "F28P55x",
+      "pages_analyzed": "599-646 (整章功能段, 含 bootloader/secure boot/FWU)"
+    },
+    "F28P55x_TRM_Flash_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/Flash模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-08",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "Flash",
+      "chip": "F28P55x",
+      "pages_analyzed": "798-816 (功能段; 暫存器段 817+ 為 bulk dump)"
+    },
+    "F28P55x_TRM_GPIO_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/GPIO模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-08",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "GPIO",
+      "chip": "F28P55x",
+      "pages_analyzed": "1061-1092 (功能段; 暫存器段 1093-1231 為 bulk dump)"
+    },
+    "F28P55x_TRM_SCI_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/SCI模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-08",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "SCI",
+      "chip": "F28P55x",
+      "pages_analyzed": "2765-2809"
+    },
+    "F28P55x_TRM_SDFM_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/SDFM模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-08",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "SDFM",
+      "chip": "F28P55x",
+      "pages_analyzed": "2596-2625 (功能段; 暫存器段 2626-2716 為 bulk dump)"
+    },
+    "F28P55x_TRM_CMPSS_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/CMPSS模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-08",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "CMPSS",
+      "chip": "F28P55x",
+      "pages_analyzed": "2118-2176"
+    },
+    "F28P55x_TRM_DAC_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/DAC模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-08",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "DAC",
+      "chip": "F28P55x",
+      "pages_analyzed": "2104-2117"
+    },
+    "F28P55x_TRM_AnalogSubsystem_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/Analog Subsystem模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-08",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "Analog Subsystem",
+      "chip": "F28P55x",
+      "pages_analyzed": "1733-1781"
+    },
+    "F28P55x_TRM_EQEP_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/eQEP模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-07",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "EQEP",
+      "chip": "F28P55x",
+      "pages_analyzed": "2523-2557"
+    },
+    "F28P55x_TRM_ADC_sprujf8.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/F28P551/ADC模組分析 (SPRUJF8).md",
+      "analyzed_date": "2026-06-07",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "ADC",
+      "chip": "F28P55x",
+      "pages_analyzed": "1782-1858"
+    },
+    "AM275x_TRM_Interconnect_sprujc6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM275x/Interconnect模組分析 (SPRUJC6B).md",
+      "analyzed_date": "2026-06-05",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "Interconnect",
+      "chip": "AM275x",
+      "pages_analyzed": "56-59"
+    },
+    "snla261a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/Networking/Ethernet PHY/DP838xx Wake-on-LAN 應用分析 (SNLA261A).md",
+      "analyzed_date": "2026-05-30",
+      "source_pdf": "RAW/snla261a.pdf",
+      "module": null,
+      "chip": "DP838xx",
+      "pages_analyzed": "1-15"
+    },
+    "snla423a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/Networking/EtherCAT/DP83826 Troubleshooting Guide (SNLA423A).md",
+      "analyzed_date": "2026-05-30",
+      "source_pdf": "RAW/snla423a.pdf",
+      "module": null,
+      "chip": "DP83826",
+      "pages_analyzed": "1-23"
+    },
+    "dp83826e.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/Networking/EtherCAT/DP83826 Datasheet 完整分析 (DP83826E).md",
+      "analyzed_date": "2026-05-30",
+      "source_pdf": "RAW/dp83826e.pdf",
+      "module": null,
+      "chip": "DP83826E",
+      "pages_analyzed": "1-114"
+    },
+    "snla344c.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/Networking/EtherCAT/DP83826 PHY EtherCAT 應用設定 (SNLA344C).md",
+      "analyzed_date": "2026-05-30",
+      "source_pdf": "RAW/snla344c.pdf",
+      "module": null,
+      "chip": "DP83826",
+      "pages_analyzed": "1-13"
+    },
+    "an_phy_selection_guidev3.2.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/Networking/EtherCAT/EtherCAT PHY 選型指南 (PHY_SELECTION_GUIDE v3.2).md",
+      "analyzed_date": "2026-05-30",
+      "source_pdf": "RAW/an_phy_selection_guidev3.2.pdf",
+      "module": null,
+      "chip": null,
+      "pages_analyzed": "1-21"
+    },
+    "AM13Ex_TRM_PMCU_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/PMCU模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-18",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "PMCU",
+      "chip": "AM13Ex",
+      "pages_analyzed": "140-269"
+    },
+    "AM13Ex_TRM_ECAP_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/ECAP模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-18",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "ECAP",
+      "chip": "AM13Ex",
+      "pages_analyzed": "1342-1380"
+    },
+    "AM13Ex_TRM_MCPWM_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/MCPWM模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-16",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "MCPWM",
+      "chip": "AM13Ex",
+      "pages_analyzed": "1187-1271"
+    },
+    "AM13Ex_TRM_ADC_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/ADC模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-17",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "ADC",
+      "chip": "AM13Ex",
+      "pages_analyzed": "937-1010"
+    },
+    "AM13Ex_TRM_IOMUX_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/IOMUX模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-17",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "IOMUX",
+      "chip": "AM13Ex",
+      "pages_analyzed": "593-722"
+    },
+    "AM13Ex_TRM_CMPSS_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/CMPSS模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-17",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "CMPSS",
+      "chip": "AM13Ex",
+      "pages_analyzed": "1128-1155"
+    },
+    "AM13Ex_TRM_EQEP_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/EQEP模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-18",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "EQEP",
+      "chip": "AM13Ex",
+      "pages_analyzed": "1381-1451"
+    },
+    "AM13Ex_TRM_Events_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/Events模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-18",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "Events",
+      "chip": "AM13Ex",
+      "pages_analyzed": "587-592"
+    },
+    "AM13Ex_TRM_PGA_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/PGA模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-18",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "PGA",
+      "chip": "AM13Ex",
+      "pages_analyzed": "1156-1186"
+    },
+    "AM13Ex_TRM_Crossbar_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/Crossbar模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-18",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "Crossbar",
+      "chip": "AM13Ex",
+      "pages_analyzed": "1452-1519"
+    },
+    "AM13Ex_TRM_DMA_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/DMA模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-18",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "DMA",
+      "chip": "AM13Ex",
+      "pages_analyzed": "444-487"
+    },
+    "AM13Ex_TRM_UNICOMM_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/UNICOMM模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-18",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "UNICOMM",
+      "chip": "AM13Ex",
+      "pages_analyzed": "1520-1539"
+    },
+    "AM13Ex_TRM_SPI_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/SPI模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-18",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "SPI",
+      "chip": "AM13Ex",
+      "pages_analyzed": "1726-1772"
+    },
+    "AM13Ex_TRM_Timers_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/Timers模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-18",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "Timers",
+      "chip": "AM13Ex",
+      "pages_analyzed": "2217-2346"
+    },
+    "AM13Ex_TRM_WWDT_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/WWDT模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-18",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "WWDT",
+      "chip": "AM13Ex",
+      "pages_analyzed": "2412-2437"
+    },
+    "AM13Ex_TRM_GPIO_sprujf2a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-18",
+      "output_note": "專業領域/AM13Ex/GPIO模組分析 (SPRUJF2A).md"
+    },
+    "drv8300.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-18",
+      "output_note": "專業領域/DRV8300/DRV8300 三相BLDC閘極驅動器資料表分析 (SLVSFG5D).md",
+      "source_pdf": "RAW/drv8300.pdf",
+      "chip": "DRV8300",
+      "pages_analyzed": "1-35"
+    },
+    "AM13Ex_TRM_TMU_sprujf2a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-18",
+      "output_note": "專業領域/AM13Ex/TMU模組分析 (SPRUJF2A).md",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "TMU",
+      "chip": "AM13Ex",
+      "pages_analyzed": "347-366"
+    },
+    "AM13Ex_TRM_FLASH_sprujf2a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-18",
+      "output_note": "專業領域/AM13Ex/Flash模組分析 (SPRUJF2A).md",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "FLASH",
+      "chip": "AM13Ex",
+      "pages_analyzed": "488-552"
+    },
+    "AM13Ex_TRM_MCAN_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/MCAN模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-18",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "MCAN",
+      "chip": "AM13Ex",
+      "pages_analyzed": "1773-1858"
+    },
+    "AM13Ex_TRM_CRC_sprujf2a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-18",
+      "output_note": "專業領域/AM13Ex/CRC模組分析 (SPRUJF2A).md",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "CRC",
+      "chip": "AM13Ex",
+      "pages_analyzed": "2080-2097"
+    },
+    "AM13Ex_TRM_AES_sprujf2a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-18",
+      "output_note": "專業領域/AM13Ex/AES模組分析 (SPRUJF2A).md",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "AES",
+      "chip": "AM13Ex",
+      "pages_analyzed": "2098-2182"
+    },
+    "AM13Ex_TRM_GSC_sprujf2a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-18",
+      "output_note": "專業領域/AM13Ex/GSC模組分析 (SPRUJF2A).md",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "GSC",
+      "chip": "AM13Ex",
+      "pages_analyzed": "377-443"
+    },
+    "C2000_InstaSPIN_TuningRegulators_spruhj1i.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/InstaSPIN/PI調節器調整指南 (SPRUHJ1I Chapter 11).md",
+      "analyzed_date": "2026-05-18",
+      "source_pdf": "RAW/spruhj1i.pdf",
+      "module": "TuningRegulators",
+      "chip": "C2000",
+      "pages_analyzed": "403-434"
+    },
+    "AM13Ex_TRM_EPI_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/EPI模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-19",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "EPI",
+      "chip": "AM13Ex",
+      "pages_analyzed": "1960-2061"
+    },
+    "drv8323.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/DRV832x/DRV832x 三相智慧閘極驅動器分析 (SLVSDJ3D).md",
+      "analyzed_date": "2026-05-19",
+      "source_pdf": "RAW/drv8323.pdf",
+      "chip": "DRV832x",
+      "pages_analyzed": "1-88"
+    },
+    "AM13Ex_TRM_SecureROM_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/Secure ROM模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-19",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "Secure ROM",
+      "chip": "AM13Ex",
+      "pages_analyzed": "369-376"
+    },
+    "AM13Ex_TRM_EAM_sprujf2a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM13Ex/EAM模組分析 (SPRUJF2A).md",
+      "analyzed_date": "2026-05-19",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "EAM",
+      "chip": "AM13Ex",
+      "pages_analyzed": "553-586"
+    },
+    "spruj26a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-20",
+      "output_note": "專業領域/Motor_Control/C2000 MotorControl SDK Universal Lab 實作指南 (SPRUJ26A).md",
+      "source_pdf": "RAW/spruj26a.pdf",
+      "chip": "C2000",
+      "pages_analyzed": "1-103"
+    },
+    "slvaf84.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-20",
+      "output_note": "專業領域/Gate_Drivers/DRV831x 集成MOSFET驅動器延遲與死區時間分析 (SLVAF84).md",
+      "source_pdf": "RAW/slvaf84.pdf",
+      "chip": "DRV831x",
+      "pages_analyzed": "1-11"
+    },
+    "slup329.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-20",
+      "output_note": "專業領域/LLC/LLC Converter Small Signal Modeling (SLUP329).md",
+      "source_pdf": "RAW/slup329.pdf",
+      "chip": "Power_Supply",
+      "pages_analyzed": "1-25"
+    },
+    "slua834b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-20",
+      "output_note": "專業領域/LLC/Improving Transient Response in LLC Converters Using HHC (SLUA834B).md",
+      "source_pdf": "RAW/slua834b.pdf",
+      "chip": "Power_Supply",
+      "pages_analyzed": "1-8"
+    },
+    "spradj1a.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/LLC/數位實作 HHC LLC 諧振轉換器 (SPRADJ1A).md",
+      "analyzed_date": "2026-05-20",
+      "source_pdf": "RAW/spradj1a.pdf",
+      "module": null,
+      "chip": "C2000_F2800x",
+      "pages_analyzed": "1-14"
+    },
+    "AM275x_TRM_11DataMovementArchitecture_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-21",
+      "output_note": "專業領域/AM275x/Data Movement Architecture模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "11 Data Movement Architecture",
+      "chip": "AM275x",
+      "pages_analyzed": "606-774"
+    },
+    "978-3-031-72687-3.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-21",
+      "output_note": "專業領域/未分類/Active Disturbance Rejection Control — From Principles to Practice (9783031726873).md",
+      "source_pdf": "RAW/978-3-031-72687-3.pdf",
+      "chip": "N/A",
+      "pages_analyzed": "1-219"
+    },
+    "AM275x_TRM_FSS_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-21",
+      "output_note": "專業領域/AM275x/FSS模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "FSS",
+      "chip": "AM275x",
+      "pages_analyzed": "1144-1153,9692-9731,9849-9862"
+    },
+    "AM275x_TRM_OSPI_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-21",
+      "output_note": "專業領域/AM275x/OSPI模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "OSPI",
+      "chip": "AM275x",
+      "pages_analyzed": "1154-1181"
+    },
+    "AM275x_TRM_HyperBus_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-21",
+      "output_note": "專業領域/AM275x/HyperBus模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "HyperBus",
+      "chip": "AM275x",
+      "pages_analyzed": "1182-1189,9936-9974"
+    },
+    "AS5047P_DS000324_3-00.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-22",
+      "output_note": "專業領域/Sensors/AS5047P 磁性旋轉位置感測器資料表分析 (DS000324).md",
+      "source_pdf": "RAW/AS5047P_DS000324_3-00.pdf",
+      "chip": "AS5047P",
+      "pages_analyzed": "1-41",
+      "flags": "-N"
+    },
+    "MT6826S_Datasheet_Rev.1.1.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-22",
+      "output_note": "專業領域/Motor_Control/Encoder/MT6826S 15-Bit 磁性角度編碼器資料表分析 (MT6826S).md",
+      "source_pdf": "RAW/MT6826S_Datasheet_Rev.1.1.pdf",
+      "chip": "MT6826S",
+      "pages_analyzed": "1-47",
+      "flags": "-N"
+    },
+    "F28P65x_TRM_ESC_spruiz1b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-21",
+      "output_note": "專業領域/F28P65x/ESC模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "26 EtherCAT SubordinateDevice Controller (ESC)",
+      "chip": "F28P65x",
+      "pages_analyzed": "4481-4554 (Chapter 26, 2 parallel chunk-agents, orchestrator synthesized; --force re-run confirmed unchanged)"
+    },
+    "F28P65x_TRM_SPI_spruiz1b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-22",
+      "output_note": "專業領域/F28P65x/SPI模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "SPI",
+      "chip": "F28P65x",
+      "pages_analyzed": "4819-4865"
+    },
+    "F28P65x_TRM_EPG_spruiz1b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-01",
+      "output_note": "專業領域/F28P65x/EPG模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "EPG",
+      "chip": "F28P65x",
+      "pages_analyzed": "5123-5179 (Chapter 34, 1 chunk)"
+    },
+    "F28P65x_TRM_DMA_spruiz1b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-22",
+      "output_note": "專業領域/F28P65x/DMA模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "DMA",
+      "chip": "F28P65x",
+      "pages_analyzed": "1692-1753"
+    },
+    "F28P65x_TRM_EPWM_spruiz1b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-22",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "EPWM",
+      "chip": "F28P65x",
+      "pages_analyzed": "3755-4174",
+      "output_note": "專業領域/F28P65x/EPWM模組分析 (SPRUIZ1B).md"
+    },
+    "AM261x_TRM_ECAP_sprujb6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM261x/ECAP模組分析 (SPRUJB6B).md",
+      "analyzed_date": "2026-05-27",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "ECAP",
+      "chip": "AM261x",
+      "pages_analyzed": "73,822-857"
+    },
+    "AM261x_TRM_EPWM_sprujb6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM261x/EPWM模組分析 (SPRUJB6B).md",
+      "analyzed_date": "2026-05-27",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "EPWM",
+      "chip": "AM261x",
+      "pages_analyzed": "683-821"
+    },
+    "AM261x_TRM_EQEP_sprujb6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM261x/EQEP模組分析 (SPRUJB6B).md",
+      "analyzed_date": "2026-05-27",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "eQEP",
+      "chip": "AM261x",
+      "pages_analyzed": "75,858-888"
+    },
+    "AM261x_TRM_OSPI_sprujb6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM261x/OSPI模組分析 (SPRUJB6B).md",
+      "analyzed_date": "2026-05-27",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "OSPI",
+      "chip": "AM261x",
+      "pages_analyzed": "112-117,1552-1626"
+    },
+    "AM261x_TRM_SDFM_sprujb6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM261x/SDFM模組分析 (SPRUJB6B).md",
+      "analyzed_date": "2026-05-27",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "SDFM",
+      "chip": "AM261x",
+      "pages_analyzed": "77-78,928-955"
+    },
+    "AM275x_TRM_RAT_sprujc6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM275x/RAT模組分析 (SPRUJC6B).md",
+      "analyzed_date": "2026-06-04",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "RAT",
+      "chip": "AM275x",
+      "pages_analyzed": "408-410"
+    },
+    "AM275x_TRM_CTRLMMR_sprujc6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM275x/CTRL_MMR模組分析 (SPRUJC6B).md",
+      "analyzed_date": "2026-06-04",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "CTRLMMR",
+      "chip": "AM275x",
+      "pages_analyzed": "77-79,298-300"
+    },
+    "AM275x_TRM_OCSRAM_sprujc6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM275x/OCSRAM模組分析 (SPRUJC6B).md",
+      "analyzed_date": "2026-06-04",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "OCSRAM",
+      "chip": "AM275x",
+      "pages_analyzed": "438"
+    },
+    "AM275x_TRM_Timers_sprujc6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM275x/Timers模組分析 (SPRUJC6B).md",
+      "analyzed_date": "2026-06-04",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "Timers",
+      "chip": "AM275x",
+      "pages_analyzed": "1425-1445"
+    },
+    "AM275x_TRM_OptiFlash_sprujc6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM275x/OptiFlash模組分析 (SPRUJC6B).md",
+      "analyzed_date": "2026-06-04",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "OptiFlash",
+      "chip": "AM275x",
+      "pages_analyzed": "1189-1197"
+    },
+    "AM275x_TRM_DCC_sprujc6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM275x/DCC模組分析 (SPRUJC6B).md",
+      "analyzed_date": "2026-06-04",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "DCC",
+      "chip": "AM275x",
+      "pages_analyzed": "231-242",
+      "flags": "-N"
+    },
+    "AM275x_TRM_ESM_sprujc6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM275x/ESM模組分析 (SPRUJC6B).md",
+      "analyzed_date": "2026-06-04",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "ESM",
+      "chip": "AM275x",
+      "pages_analyzed": "243-245,1453-1466",
+      "flags": "-N"
+    },
+    "AM275x_TRM_I2C_sprujc6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM275x/I2C模組分析 (SPRUJC6B).md",
+      "analyzed_date": "2026-06-04",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "I2C",
+      "chip": "AM275x",
+      "pages_analyzed": "906-925"
+    },
+    "AM275x_TRM_UART_sprujc6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM275x/UART模組分析 (SPRUJC6B).md",
+      "analyzed_date": "2026-06-04",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "UART",
+      "chip": "AM275x",
+      "pages_analyzed": "976-1034"
+    },
+    "AM275x_TRM_MCRC_sprujc6b.pdf": {
+      "status": "DONE",
+      "output_note": "專業領域/AM275x/MCRC模組分析 (SPRUJC6B).md",
+      "analyzed_date": "2026-06-04",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "MCRC",
+      "chip": "AM275x",
+      "pages_analyzed": "1467-1479"
+    },
+    "F28P65x_TRM_CLB_spruiz1b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-23",
+      "output_note": "專業領域/F28P65x/CLB模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "CLB",
+      "chip": "F28P65x",
+      "pages_analyzed": "1524-1667"
+    },
+    "F28P65x_XBAR_spruiz1b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-22",
+      "output_note": "專業領域/F28P65x/X-BAR模組分析 (SPRUIZ1B).md"
+    },
+    "F28P65x_TRM_AnalogSubsystem_spruiz1b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-22",
+      "output_note": "專業領域/F28P65x/Analog Subsystem模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "Analog Subsystem",
+      "chip": "F28P65x",
+      "pages_analyzed": "3149-3188"
+    },
+    "spracl3.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-23",
+      "output_note": "專業領域/C2000/C2000 CLB 設計實踐 — 可配置邏輯塊完整指南 (SPRACL3).md",
+      "source_pdf": "RAW/spracl3.pdf",
+      "chip": "C2000_F2837xD",
+      "pages_analyzed": "1-25"
+    },
+    "sprad62.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-23",
+      "output_note": "專業領域/C2000/CLB 自定義串列介面實作指南 (SPRAD62).md",
+      "source_pdf": "RAW/sprad62.pdf",
+      "chip": "C2000",
+      "pages_analyzed": "1-42"
+    },
+    "AM261x_TRM_MMC_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-25",
+      "output_note": "專業領域/AM261x/MMC模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "MMC",
+      "chip": "AM261x",
+      "pages_analyzed": "1513-1551"
+    },
+    "AM261x_TRM_EDMA_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-25",
+      "output_note": "專業領域/AM261x/EDMA模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "EDMA",
+      "chip": "AM261x",
+      "pages_analyzed": "1050-1111"
+    },
+    "AM261x_TRM_Interrupts_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-25",
+      "output_note": "專業領域/AM261x/Interrupts模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "Interrupts",
+      "chip": "AM261x",
+      "pages_analyzed": "993-1046"
+    },
+    "AM261x_TRM_ControlModule_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-25",
+      "output_note": "專業領域/AM261x/Control Module模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "Control Module",
+      "chip": "AM261x",
+      "pages_analyzed": "208-237"
+    },
+    "AM261x_TRM_Power_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-25",
+      "output_note": "專業領域/AM261x/Power模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "Power",
+      "chip": "AM261x",
+      "pages_analyzed": "238-254"
+    },
+    "AM261x_TRM_Reset_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-25",
+      "output_note": "專業領域/AM261x/Reset模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "Reset",
+      "chip": "AM261x",
+      "pages_analyzed": "255-263"
+    },
+    "AM261x_TRM_Clocking_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-26",
+      "output_note": "專業領域/AM261x/Clocking模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "Clocking",
+      "chip": "AM261x",
+      "pages_analyzed": "264-302"
+    },
+    "AM261x_TRM_MCSPI_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-26",
+      "output_note": "專業領域/AM261x/MCSPI模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "MCSPI",
+      "chip": "AM261x",
+      "pages_analyzed": "1157-1201"
+    },
+    "slaz778.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-26",
+      "output_note": "專業領域/AM13Ex/AM13E230x Silicon Rev 1.0 勘誤表 (SLAZ778).md",
+      "source_pdf": "RAW/slaz778.pdf",
+      "chip": "AM13E230x",
+      "pages_analyzed": "1-5"
+    },
+    "AM275x_TRM_BootModes_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-26",
+      "output_note": "專業領域/AM275x/Boot Modes模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "Boot Modes",
+      "chip": "AM275x",
+      "pages_analyzed": "261-279"
+    },
+    "AM275x_TRM_BOOTMODEPinMapping_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-26",
+      "output_note": "專業領域/AM275x/BOOTMODE Pin Mapping模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "BOOTMODE Pin Mapping",
+      "chip": "AM275x",
+      "pages_analyzed": "255-285"
+    },
+    "AM275x_TRM_POWER_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-26",
+      "output_note": "專業領域/AM275x/Power模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "POWER",
+      "chip": "AM275x",
+      "pages_analyzed": "301-332"
+    },
+    "F28P65x_TRM_ADC_spruiz1b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-26",
+      "output_note": "專業領域/F28P65x/ADC模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "ADC",
+      "chip": "F28P65x",
+      "pages_analyzed": "3189-3584"
+    },
+    "F28P65x_TRM_CMPSS_spruiz1b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-26",
+      "output_note": "專業領域/F28P65x/CMPSS模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "CMPSS",
+      "chip": "F28P65x",
+      "pages_analyzed": "3599-3659"
+    },
+    "AM261x_TRM_eCAP_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-27",
+      "output_note": "專業領域/AM261x/eCAP模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "eCAP",
+      "chip": "AM261x",
+      "pages_analyzed": "73,822-857"
+    },
+    "AM261x_TRM_eQEP_sprujb6b.pdf": {
+      "status": "IN_PROGRESS",
+      "analyzed_date": "2026-05-27",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "eQEP",
+      "chip": "AM261x",
+      "pages_analyzed": "75,858-888"
+    },
+    "AM13Ex_TRM_Introduction_sprujf2a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-28",
+      "output_note": "專業領域/AM13Ex/Introduction模組分析 (SPRUJF2A).md",
+      "source_pdf": "RAW/sprujf2a.pdf",
+      "module": "Introduction",
+      "chip": "AM13Ex",
+      "pages_analyzed": "13-136"
+    },
+    "AM275x_TRM_MCASP_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-28",
+      "output_note": "專業領域/AM275x/MCASP模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "MCASP",
+      "chip": "AM275x",
+      "pages_analyzed": "107-115"
+    },
+    "AM275x_TRM_ASRC_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-28",
+      "output_note": "專業領域/AM275x/AASRC模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "ASRC",
+      "chip": "AM275x",
+      "pages_analyzed": "116-134"
+    },
+    "AM275x_TRM_AudioTrackingLogic_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-28",
+      "output_note": "專業領域/AM275x/ATL模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "Audio Tracking Logic",
+      "chip": "AM275x",
+      "pages_analyzed": "11, 137-138"
+    },
+    "AM275x_TRM_MLBSS_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-28",
+      "output_note": "專業領域/AM275x/MLBSS模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "MLBSS",
+      "chip": "AM275x",
+      "pages_analyzed": "868-895"
+    },
+    "AM275x_TRM_GPIO_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-28",
+      "output_note": "專業領域/AM275x/GPIO模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "GPIO",
+      "chip": "AM275x",
+      "pages_analyzed": "140-145,444-447,897-905"
+    },
+    "AM275x_TRM_Interrupts_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-28",
+      "output_note": "專業領域/AM275x/Interrupts模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "Interrupts",
+      "chip": "AM275x",
+      "pages_analyzed": "88-100"
+    },
+    "AM261x_TRM_CPSW_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-28",
+      "output_note": "專業領域/AM261x/CPSW模組分析 (SPRUJB6B).md",
+      "source_pdf": "RAW/sprujb6b.pdf",
+      "module": "CPSW",
+      "chip": "AM261x",
+      "pages_analyzed": "99-101,1269-1381",
+      "flags": "-N"
+    },
+    "[野火]LwIP应用开发实战指南—基于野火STM32.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-28",
+      "output_note": "專業領域/LwIP/LwIP 應用開發實戰指南 (野火EmbedFire).md",
+      "source_pdf": "RAW/[野火]LwIP应用开发实战指南—基于野火STM32.pdf",
+      "chip": "STM32",
+      "pages_analyzed": "1-731",
+      "flags": "-N"
+    },
+    "F28P55x_TRM_ROMCodeAndPeripheralBooting_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-29",
+      "output_note": "專業領域/F28P55x/ROM Code and Peripheral Booting 模組分析 (SPRUJF8).md",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "ROM Code and Peripheral Booting",
+      "chip": "F28P55x",
+      "pages_analyzed": "599-646"
+    },
+    "F28P55x_TRM_PMBUS_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-29",
+      "output_note": "專業領域/F28P55x/PMBUS模組分析 (SPRUJF8).md",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "PMBUS",
+      "chip": "F28P55x",
+      "pages_analyzed": "2992-3040",
+      "flags": "-N"
+    },
+    "F28P55x_TRM_CLA_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-29",
+      "output_note": "專業領域/F28P55x/CLA模組分析 (SPRUJF8).md",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "CLA",
+      "chip": "F28P55x",
+      "pages_analyzed": "820-1037"
+    },
+    "F28P55x_TRM_I2C_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-29",
+      "output_note": "專業領域/F28P55x/I2C模組分析 (SPRUJF8).md",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "I2C",
+      "chip": "F28P55x",
+      "pages_analyzed": "2938-2991"
+    },
+    "F28P55x_TRM_CLB_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-29",
+      "output_note": "專業領域/F28P55x/CLB模組分析 (SPRUJF8).md",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "CLB",
+      "chip": "F28P55x",
+      "pages_analyzed": "3319-3458"
+    },
+    "F28P55x_TRM_EPWM_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-29",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "EPWM",
+      "chip": "F28P55x",
+      "pages_analyzed": "2206-2479",
+      "output_note": "專業領域/F28P55x/EPWM模組分析 (SPRUJF8).md"
+    },
+    "ethercat_esc_datasheet_sec1_technology_v2.5.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-29",
+      "output_note": "專業領域/EtherCAT/EtherCAT Slave Controller — Section I Technology 分析 (Beckhoff v2.5).md",
+      "source_pdf": "RAW/ethercat_esc_datasheet_sec1_technology_v2.5.pdf",
+      "chip": "Beckhoff_ESC",
+      "pages_analyzed": "1-162",
+      "flags": "-N"
+    },
+    "ethercat_esc_datasheet_sec2_registers_v3.3.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-05-29",
+      "output_note": "專業領域/EtherCAT/EtherCAT ESC 暫存器描述資料表分析 (ESC-SEC2-v3.3).md",
+      "source_pdf": "RAW/ethercat_esc_datasheet_sec2_registers_v3.3.pdf",
+      "chip": "Beckhoff_ESC",
+      "pages_analyzed": "1-151",
+      "flags": "-N"
+    },
+    "AM275x_TRM_Mailbox_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-02",
+      "output_note": "專業領域/AM275x/Mailbox模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "Mailbox",
+      "chip": "AM275x",
+      "pages_analyzed": "423-429,7460-7478"
+    },
+    "AM275x_TRM_SPINLOCK_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-03",
+      "output_note": "專業領域/AM275x/SPINLOCK模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "SPINLOCK",
+      "chip": "AM275x",
+      "pages_analyzed": "88,430-434,7612-7617"
+    },
+    "spract2.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-03",
+      "output_note": "專業領域/Jacinto7/OSPI Controller PHY Tuning 演算法 (SPRACT2).md",
+      "source_pdf": "RAW/spract2.pdf",
+      "module": null,
+      "chip": "Jacinto7_TDA4_DRA8",
+      "pages_analyzed": "1-7"
+    },
+    "AM275x_TRM_GTC_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-04",
+      "output_note": "專業領域/AM275x/GTC模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "GTC",
+      "chip": "AM275x",
+      "pages_analyzed": "197,1404-1406,5257,5273,10481-10493"
+    },
+    "AM275x_TRM_WWDT_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-04",
+      "output_note": "專業領域/AM275x/RTI-WWDT模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "WWDT",
+      "chip": "AM275x",
+      "pages_analyzed": "1406-1412,10495-10548"
+    },
+    "AM275x_TRM_RTC_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-04",
+      "output_note": "專業領域/AM275x/RTC模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "RTC",
+      "chip": "AM275x",
+      "pages_analyzed": "1413-1424,10549-10571"
+    },
+    "AM275x_TRM_Clocking_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-04",
+      "output_note": "專業領域/AM275x/Clocking模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "Clocking",
+      "chip": "AM275x",
+      "pages_analyzed": "363-369"
+    },
+    "AM275x_TRM_Reset_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-04",
+      "output_note": "專業領域/AM275x/Reset模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "Reset",
+      "chip": "AM275x",
+      "pages_analyzed": "333-362"
+    },
+    "AM275x_TRM_PLL_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-04",
+      "output_note": "專業領域/AM275x/PLL模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "PLL",
+      "chip": "AM275x",
+      "pages_analyzed": "280-283,372-382,6449-6453"
+    },
+    "AM275x_TRM_MMCSD_sprujc6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-05",
+      "output_note": "專業領域/AM275x/MMCSD模組分析 (SPRUJC6B).md",
+      "source_pdf": "RAW/sprujc6b.pdf",
+      "module": "MMCSD",
+      "chip": "AM275x",
+      "pages_analyzed": "1198-1266"
+    },
+    "F28P55x_TRM_ERAD_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-07",
+      "output_note": "專業領域/F28P551/ERAD模組分析 (SPRUJF8).md"
+    },
+    "F28P55x_TRM_X-BAR_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-07",
+      "output_note": "專業領域/F28P551/X-BAR模組分析 (SPRUJF8).md"
+    },
+    "F28P55x_TRM_ECAP_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-07",
+      "output_note": "專業領域/F28P551/eCAP模組分析 (SPRUJF8).md"
+    },
+    "F28P55x_TRM_PGA_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-07",
+      "output_note": "專業領域/F28P551/PGA模組分析 (SPRUJF8).md"
+    },
+    "F28P55x_TRM_DCSM_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-08",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "DCSM",
+      "chip": "F28P55x",
+      "pages_analyzed": "647-797",
+      "output_note": "專業領域/F28P551/DCSM模組分析 (SPRUJF8).md"
+    },
+    "F28P55x_TRM_FSI_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-08",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "FSI",
+      "chip": "F28P55x",
+      "pages_analyzed": "2810-2937",
+      "output_note": "專業領域/F28P551/FSI模組分析 (SPRUJF8).md"
+    },
+    "F28P55x_TRM_LIN_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-08",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "LIN",
+      "chip": "F28P55x",
+      "pages_analyzed": "3209-3318",
+      "output_note": "專業領域/F28P551/LIN模組分析 (SPRUJF8).md"
+    },
+    "F28P55x_TRM_DCC_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-08",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "DCC",
+      "chip": "F28P55x",
+      "pages_analyzed": "1038-1060",
+      "output_note": "專業領域/F28P551/DCC模組分析 (SPRUJF8).md"
+    },
+    "F28P55x_TRM_AES_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-09",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "AES",
+      "chip": "F28P55x",
+      "pages_analyzed": "3459-3531",
+      "output_note": "專業領域/F28P551/AES模組分析 (SPRUJF8).md"
+    },
+    "F28P55x_TRM_DeviceID_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-09",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "Device Identification and Configuration Registers",
+      "chip": "F28P55x",
+      "pages_analyzed": "96, 287-338",
+      "output_note": "專業領域/F28P551/Device ID 與配置暫存器分析 (SPRUJF8).md"
+    },
+    "F28P55x_TRM_Clocking_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-09",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "Clocking",
+      "chip": "F28P55x",
+      "pages_analyzed": "114-127",
+      "output_note": "專業領域/F28P551/Clocking 模組分析 (SPRUJF8).md"
+    },
+    "C28x_CPU_CPUInterruptsAndReset_spru430f.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-10",
+      "output_note": "專業領域/C28x/CPU Interrupts and Reset模組分析 (SPRU430F).md",
+      "source_pdf": "RAW/spru430f.pdf",
+      "module": "CPU Interrupts and Reset",
+      "chip": "C28x",
+      "pages_analyzed": "52-66 (Chapter 3)",
+      "flags": "-N"
+    },
+    "C28x_CPU_ArchitecturalOverview_spru430f.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-10",
+      "output_note": "專業領域/C28x/Architectural Overview模組分析 (SPRU430F).md",
+      "source_pdf": "RAW/spru430f.pdf",
+      "module": "Architectural Overview",
+      "chip": "C28x",
+      "pages_analyzed": "13-19 (Chapter 1)",
+      "flags": "-N"
+    },
+    "spruiy2a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-10",
+      "output_note": "專業領域/C29x/C29x CPU 架構分析 (SPRUIY2A).md",
+      "source_pdf": "RAW/spruiy2a.pdf",
+      "module": null,
+      "chip": "C29x",
+      "pages_analyzed": "1-75",
+      "flags": "-N"
+    },
+    "F28P55x_TRM_MemoryController_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-10",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "Memory Controller Module",
+      "chip": "F28P55x",
+      "pages_analyzed": "136-143 (§3.11); 屬 Chapter 3 System Control",
+      "output_note": "專業領域/F28P551/Memory Controller 模組分析 (SPRUJF8).md"
+    },
+    "F28P55x_TRM_LiveFirmwareUpdate_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-10",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "Live Firmware Update",
+      "chip": "F28P55x",
+      "pages_analyzed": "144-149 (§3.13 LFU); 屬 Chapter 3 System Control",
+      "output_note": "專業領域/F28P551/Live Firmware Update (LFU) 模組分析 (SPRUJF8).md"
+    },
+    "F28P55x_TRM_Watchdog_sprujf8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-09",
+      "source_pdf": "RAW/sprujf8.pdf",
+      "module": "Watchdog Timer",
+      "chip": "F28P55x",
+      "pages_analyzed": "130-132",
+      "output_note": "專業領域/F28P551/Watchdog Timer 模組分析 (SPRUJF8).md"
+    },
+    "slyy154b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-01",
+      "output_note": "專業領域/Motor_Control/CurrentSensing/電流感測工程師指南 (SLYY154B).md"
+    },
+    "AM261x_TRM_TimeSync_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-11",
+      "output_note": "專業領域/AM261x/Time Sync 模組分析 (SPRUJB6B).md"
+    },
+    "AM261x_TRM_DeviceConfiguration_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-11",
+      "output_note": "專業領域/AM261x/Device Configuration 模組分析 (SPRUJB6B).md"
+    },
+    "AM261x_TRM_PRU_ICSSM_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-12",
+      "output_note": "專業領域/AM261x/PRU-ICSS模組分析 (SPRUJB6B).md"
+    },
+    "AM261x_TRM_OptiFlash_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-12",
+      "output_note": "專業領域/AM261x/OptiFlash 模組分析 (SPRUJB6B).md"
+    },
+    "AM261x_TRM_InterprocessorCommunication_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-12",
+      "output_note": "專業領域/AM261x/IPC模組分析 (SPRUJB6B).md"
+    },
+    "AM261x_TRM_MemoryControllers_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-12",
+      "output_note": "專業領域/AM261x/Memory Controllers 模組分析 (SPRUJB6B).md"
+    },
+    "AM261x_TRM_TimerModules_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-12",
+      "output_note": "專業領域/AM261x/Timer Modules (RTI-WWDT) 模組分析 (SPRUJB6B).md"
+    },
+    "AM261x_TRM_TMU_sprujb6b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-12",
+      "output_note": "專業領域/AM261x/TMU模組分析 (SPRUJB6B).md"
+    },
+    "F28003x_TRM_FlashModule_spruiw9c.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-15",
+      "output_note": "專業領域/F28003x/Flash模組分析 (SPRUIW9C).md"
+    },
+    "F28003x_TRM_DCSM_spruiw9c.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-15",
+      "output_note": "專業領域/F28003x/DCSM模組分析 (SPRUIW9C).md"
+    },
+    "spracp8a.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-15",
+      "output_note": "專業領域/C2000/C2000 DCSM Security Tool (SPRACP8A).md"
+    },
+    "sprada5.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-15",
+      "output_note": "專業領域/F28P551/PGA Type-2 應用案例分析 (SPRADA5).md"
+    },
+    "spru566u.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-15",
+      "output_note": "專業領域/C2000/C2000 Real-Time MCU Peripherals 選型參考指南 (SPRU566U).md",
+      "flags": "-N"
+    },
+    "spruj27c.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-17",
+      "output_note": "專業領域/F28003x/Flash API 參考指南 (SPRUJ27C).md",
+      "flags": "-N"
+    },
+    "slvafz3.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-26",
+      "output_note": "專業領域/Gate_Drivers/馬達負載對應 BLDC 閘極驅動器規格選型分析 (SLVAFZ3).md"
+    },
+    "spruiz1b_SDFM": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-30",
+      "output_note": "專業領域/F28P65x/SDFM模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "SDFM"
+    },
+    "spruiz1b_ECAP": {
+      "status": "DONE",
+      "analyzed_date": "2026-06-30",
+      "output_note": "專業領域/F28P65x/ECAP模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "ECAP",
+      "chip": "F28P65x",
+      "pages_analyzed": "3660-3754 (Chapter 21, 2 chunks)"
+    },
+    "spruiz1b_EQEP": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-01",
+      "output_note": "專業領域/F28P65x/EQEP模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "EQEP",
+      "chip": "F28P65x",
+      "pages_analyzed": "4175-4245 (Chapter 23, 2 chunks)"
+    },
+    "spruiz1b_FSI": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-01",
+      "output_note": "專業領域/F28P65x/FSI模組分析 (SPRUIZ1B).md",
+      "module": "FSI",
+      "chip": "F28P65x",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "pages_analyzed": "4555-4678 (Chapter 27, 3 chunks)"
+    },
+    "spruiz1b_IPC": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-01",
+      "output_note": "專業領域/F28P65x/IPC模組分析 (SPRUIZ1B).md",
+      "module": "IPC",
+      "chip": "F28P65x",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "pages_analyzed": "2306-2311 functional + 2377-2379 driverlib mapping (Chapter 15, skipping bulk register dump 2311-2377, 1 chunk)"
+    },
+    "spruiz1b_DAC": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-01",
+      "output_note": "專業領域/F28P65x/DAC模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "DAC",
+      "chip": "F28P65x",
+      "pages_analyzed": "3585-3598 (Chapter 19, 1 chunk)"
+    },
+    "F28P65x_TRM_UART_spruiz1b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-01",
+      "output_note": "專業領域/F28P65x/UART模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "UART",
+      "chip": "F28P65x",
+      "pages_analyzed": "5344-5354 functional + 5357-5380 core registers + 5399-5401 driverlib mapping (Chapter 36, skipping bulk ID/9-bit register dump 5381-5398, 1 chunk)"
+    },
+    "F28P65x_TRM_LIN_spruiz1b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-02",
+      "output_note": "專業領域/F28P65x/LIN模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "chip": "F28P65x (C2000)",
+      "pages_analyzed": "5402-5511 (TRM Chapter 37 LIN, module mode, 2 chunks)",
+      "flags": ""
+    },
+    "Full_Speed_Range_Drive_with_Sensorless_Field-Oriented_Control_on_3.4kw_Drone_Motor.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-04",
+      "output_note": "專業領域/Motor_Control/Drone/Full Speed Range Sensorless FOC on 3.4kW Drone Motor 論文分析.md"
+    },
+    "IET Power Electronics - 2019 - Carey - Hybrid field oriented and direct torque control for sensorless BLDC motors used in.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-05",
+      "output_note": "專業領域/Motor_Control/Drone/Hybrid FOC-DTC Sensorless BLDC (Carey 2019) 論文分析.md",
+      "source_pdf": "RAW/IET Power Electronics - 2019 - Carey - Hybrid field oriented and direct torque control for sensorless BLDC motors used in.pdf",
+      "chip": "TI C2000 Piccolo Launchpad + BOOSTXL-DRV8305EVM (paper's HW; -N no-SDK)",
+      "pages_analyzed": "1-12 (standalone paper, 1 chunk, sonnet agent, -N no-SDK)",
+      "flags": "-N"
+    },
+    "slyt692.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-05",
+      "output_note": "專業領域/Motor_Control/Drone/無人機ESC馬達控制考量 (SLYT692).md"
+    },
+    "System_benefit_of_drone_driven_by_GaN_based_inverter.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-05",
+      "output_note": "專業領域/Motor_Control/Drone/System benefit of drone driven by GaN based inverter 論文分析.md"
+    },
+    "Design_of_Digital_Current_Regulator_for_PMSM_with_Low_Carrier_Ratio.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-05",
+      "output_note": "專業領域/Motor_Control/Drone/Design of Digital Current Regulator for PMSM with Low Carrier Ratio 論文分析.md",
+      "source_pdf": "RAW/Design_of_Digital_Current_Regulator_for_PMSM_with_Low_Carrier_Ratio.pdf",
+      "chip": "N/A — academic paper (2019 ICEMS, Yanshan University)",
+      "pages_analyzed": "1-7 (standalone paper, 1 chunk, -N no-SDK)",
+      "flags": "-N"
+    },
+    "21032903.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-05",
+      "output_note": "專業領域/Motor_Control/Control_Theory/Feedforward Decoupling Control of IPMSM 論文分析.md",
+      "source_pdf": "RAW/21032903.pdf",
+      "chip": "N/A — academic paper (PIER M Vol.102, 2021)",
+      "pages_analyzed": "1-10 (standalone paper, 1 chunk)"
+    },
+    "drv8353.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-07",
+      "output_note": "專業領域/Gate_Drivers/DRV835x 100V三相智慧閘極驅動器資料表分析 (SLVSDY6A).md",
+      "source_pdf": "RAW/drv8353.pdf",
+      "chip": "DRV8350 / DRV8350R / DRV8353 / DRV8353R — 100V Three-Phase Smart Gate Driver (SLVSDY6A)",
+      "pages_analyzed": "1-101 (standalone datasheet, 2 chunks, --type appnote, -N no-SDK)",
+      "flags": "-N --type appnote --force"
+    },
+    "drv8363.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-07",
+      "output_note": "專業領域/Gate_Drivers/DRV8363 48V電池三相智慧閘極驅動器資料表分析 (SLVSHQ3).md",
+      "source_pdf": "RAW/drv8363.pdf",
+      "chip": "DRV8363 — 8 to 85V Three-Phase Smart Gate Driver with Accurate Current Sensing and Advanced Monitoring (SLVSHQ3, bootstrap architecture)",
+      "pages_analyzed": "1-104 (standalone datasheet, 2 chunks, --type appnote, -N no-SDK)",
+      "flags": "-N --type appnote"
+    },
+    "drv8363.pdf#opus-haiku": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-07",
+      "output_note": "專業領域/Gate_Drivers/DRV8363 48V電池三相智慧閘極驅動器資料表分析 (SLVSHQ3) [opus-haiku對照].md",
+      "source_pdf": "RAW/drv8363.pdf",
+      "chip": "DRV8363 (SLVSHQ3) — model-comparison variant: Opus orchestrator + Haiku chunk subagents",
+      "pages_analyzed": "1-104 (standalone datasheet, 2 chunks, --type appnote, -N no-SDK, --force)",
+      "flags": "-N --type appnote --force (opus+haiku experiment; see note §9 for haiku accuracy vs sonnet)"
+    },
+    "EtherCAT_SubordinateDevice_Controller_Software_User_Guide.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-20",
+      "output_note": "專業領域/Networking/EtherCAT/EtherCAT SubordinateDevice Controller Software 使用指南分析 (F28P65x v2.01.00.00).md",
+      "source_pdf": "RAW/EtherCAT_SubordinateDevice_Controller_Software_User_Guide.pdf",
+      "chip": "C2000 F28P65x — TI EtherCAT SubordinateDevice Controller (ESC) Software User's Guide v2.01.00.00 (CPU1/CM HAL APIs, SSC v5.12 stack, TwinCAT/EC-Engineer MainDevice setup); no official TI literature number on cover",
+      "pages_analyzed": "1-62 (standalone user's guide, 2 chunks p1-60/p61-62, parallel chunk-agents, orchestrator synthesized, --type appnote, -N no-SDK)",
+      "flags": "-N --type appnote"
+    },
+    "snla495.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-21",
+      "output_note": "專業領域/Networking/EtherCAT/F28P65 + DP83826 EtherCAT Link Down Fault Troubleshooting (SNLA495).md",
+      "source_pdf": "RAW/snla495.pdf",
+      "chip": "F28P65 (ESC) + DP83826 (PHY) — EtherCAT Link Down fault troubleshooting, layered detection (Physical/MI/Enhanced Link/Final port status) + RST voltage-divider timing case",
+      "pages_analyzed": "1-11 (standalone appnote, 1 chunk, inline, -N no-SDK)",
+      "flags": "-N"
+    },
+    "snla494.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-21",
+      "output_note": "專業領域/Networking/EtherCAT/F28P65 + DP83826 EtherCAT Frame Error Investigation (SNLA494).md",
+      "source_pdf": "RAW/snla494.pdf",
+      "chip": "F28P65 (ESC) + DP83826 (PHY) — EtherCAT Frame Error investigation, WKC/error-counter fault localization, PHY/MII Loopback isolation, ETHERCATCLKCTL clock-domain-crossing metastability fix (129-cycle delay, DCC monitoring)",
+      "pages_analyzed": "1-17 (standalone appnote, 1 chunk, inline, -N no-SDK)",
+      "flags": "-N"
+    },
+    "an_et9300_v1i10.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-27",
+      "output_note": "專業領域/Networking/EtherCAT/EtherCAT Slave Stack Code (SSC) 應用開發完整解析 (ET9300).md",
+      "source_pdf": "RAW/an_et9300_v1i10.pdf",
+      "chip": "N/A — Beckhoff EtherCAT Slave Stack Code (SSC) application note, generic ANSI-C slave stack, no chip/SDK",
+      "pages_analyzed": "1-146 (standalone appnote, --force re-run, 3 chunks p1-60/p61-120/p121-146, parallel chunk-agents, orchestrator synthesized, balanced general-purpose analysis; distinct from earlier CiA402-focused deep-dive note, kept as separate file: 專業領域/Networking/EtherCAT/EtherCAT CiA402 應用開發完整解析 (ET9300).md)",
+      "flags": "none (no -N this run; SDK lookup resolved to N/A automatically — no chip identifier in filename)"
+    },
+    "an_phy_selection_guidev3.1.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-28",
+      "output_note": "專業領域/Networking/EtherCAT/EtherCAT PHY 選型指南 (PHY_SELECTION_GUIDE v3.2).md",
+      "source_pdf": "RAW/an_phy_selection_guidev3.1.pdf",
+      "chip": "N/A — Beckhoff ESC application note (vendor-agnostic PHY selection), no TI SDK match",
+      "pages_analyzed": "N/A — superseded by v3.2, no separate note written (user decision 2026-07-28)",
+      "flags": "-N"
+    },
+    "snoaa89.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-28",
+      "output_note": "專業領域/AM243x/PRU FSI 多軸伺服頻寬優化 (SNOAA89).md",
+      "source_pdf": "RAW/snoaa89.pdf",
+      "chip": "AM243x (Sitara, PRU_ICSSG) — FSI Bandwidth-Optimization for Multi-axis Servo Control",
+      "pages_analyzed": "1-12 (standalone app note, 1 chunk, inline, -N no-SDK)",
+      "flags": "-N"
+    },
+    "tiduev1.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-28",
+      "output_note": "專業領域/Motor_Control/MultiAxis_Servo/分散式多軸伺服驅動系統 FSI 參考設計 (TIDUEV1).md",
+      "source_pdf": "RAW/tiduev1.pdf",
+      "chip": "C2000 (Master: TMS320F2838x/F28388D; Slave: TMS320F28004x/F280049C) — TIDM-02006 Distributed Multi-axis Servo Drive Over FSI Reference Design",
+      "pages_analyzed": "1-43 (standalone reference design, 1 chunk, inline, -N no-SDK)",
+      "flags": "-N"
+    },
+    "drv8311.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-03",
+      "source_pdf": "RAW/drv8311.pdf",
+      "chip": "DRV8311",
+      "pages_analyzed": "1-101 (second pass; prior chunk synthesis + Claude Code Opus read-only adviser)",
+      "flags": "-N",
+      "output_note": "專業領域/Gate_Drivers/DRV8311 Three-Phase PWM Motor Driver 資料表分析.md",
+      "document_type": "paper by filename rule; source content identified as TI datasheet and synthesized as datasheet engineering record",
+      "analysis_pass": 2,
+      "adviser": "Claude Code 2.1.220, model opus, read-only source review completed",
+      "adviser_source": "RAW/_drv8311_claude_adviser.txt",
+      "final_adviser_review": "Not completed: Claude weekly quota reached; self-verification and source-anchored corrections completed instead"
+    },
+    "can20.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-06",
+      "output_note": "專業領域/Networking/CAN Specification 2.0 規格書.md",
+      "source_pdf": "RAW/can20.pdf",
+      "chip": "N/A (vendor-neutral protocol spec)",
+      "pages_analyzed": "1-72 (standalone, 2 chunks p1-60/p61-72, parallel chunk-agents, synthesized inline)",
+      "flags": "type override: filename has no TI doc-ID, auto-default would be paper; content is Bosch CAN 2.0 protocol specification (normative, no experiments) -- new spec template type created this session (references/template-spec.md) and used instead; -N flag, no SDK lookup"
+    },
+    "F28P65x_TRM_USB_spruiz1b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-12",
+      "output_note": "專業領域/F28P65x/USB模組分析 (SPRUIZ1B).md",
+      "source_pdf": "RAW/spruiz1b.pdf",
+      "module": "32 Universal Serial Bus (USB) Controller",
+      "chip": "F28P65x",
+      "pages_analyzed": "4866-5049 (Chapter 32, 4 parallel chunk-agents, orchestrator synthesized)"
+    },
+    "C29x_TRM_SSU_spruj79b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-12",
+      "output_note": "專業領域/C29x/SSU模組分析 (SPRUJ79B).md",
+      "source_pdf": "RAW/spruj79b.pdf",
+      "chip": "F29H85x, F29P58x, F29P32x (C29x CPU core)",
+      "pages_analyzed": "1265-1549 (module mode, chapter 9, 5 parallel chunk-agents, orchestrator synthesis)",
+      "flags": "SDK verification added 2026-08-12 after skill's c29x chip-mapping table was created: 20 SSU_* driverlib functions confirmed against f29h85x-sdk_26_00_00_00 source/driverlib/ssu.h+.c (8 of them undocumented in the TRM's own Table 9-13 -- noted as a TRM documentation gap in note SS12.2); Section 10 pseudocode replaced with real driverlib calls; SECAP_HANDLER_REGS (C29DEBUGSS submodule) confirmed to have no driverlib wrapper, register-direct only, stays pseudocode"
+    },
+    "0284.F28P65X Launchpad REVA Bug.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-23",
+      "output_note": "專業領域/F28P65x/F28P65X Launchpad REVA EtherCAT PHY Bug 分析 (0284).md"
+    },
+    "C2000_CLA_Software_Development_Guide.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-30",
+      "output_note": "專業領域/C2000/C2000 CLA Software Development Guide 分析.md"
+    },
+    "fast_current_loop_library_users_guide.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-30",
+      "output_note": "專業領域/C2000/Fast Current Loop Driverlib Library 使用指南分析 (SPRUIP4).md",
+      "flags": "-N"
+    },
+    "DRV8374_0p9.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-07-31",
+      "output_note": "專業領域/Gate_Drivers/DRV8374 三相集成FET馬達驅動器資料表分析 (SLVSI42).md"
+    },
+    "mmwaveSensing-FMCW.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-11",
+      "output_note": "專業領域/mmWave/FMCW 雷達測距測速測角原理與系統設計分析 (mmwaveSensing-FMCW).md",
+      "source_pdf": "RAW/mmwaveSensing-FMCW.pdf",
+      "chip": "N/A — TI training deck (Sandeep Rao), generic FMCW radar signal-processing theory (range/velocity/angle estimation), no specific chip named",
+      "pages_analyzed": "1-70 (standalone, 2 chunks p1-60/p61-70, parallel chunk-agents, orchestrator synthesized, -N no-SDK)",
+      "flags": "-N; auto-detect default 'paper' overridden to 'appnote' — content is a practical TI training/tutorial with design formulas and system trade-offs, not an academic paper (no experiments/claims/prior-art structure)"
+    },
+    "C29x_TRM_PIPE_spruj79b.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-12",
+      "output_note": "專業領域/C29x/PIPE 模組分析 (SPRUJ79B).md",
+      "source_pdf": "RAW/spruj79b.pdf",
+      "module": "PIPE (Peripheral Interrupt Priority and Expansion) and C29 CPU Interrupts",
+      "chip": "F29H85x, F29P58x, F29P32x (C29x architecture)",
+      "pages_analyzed": "802-887 (single-file module mode, 2 chunks, parallel chunk-agents, synthesized by orchestrator)",
+      "flags": "chip-family f29 not in fixed Sub-step A table (only am13/am261x/am275x/c2000 listed) — orchestrator manually resolved SDK dirs to f29h85x-sdk_26_00_00_00 (latest of two installed versions) since PDF title names this exact chip family; SDK example refs verified via direct grep of interrupt_ex1/ex2/ex3 .c files before citing in note section 12"
+    },
+    "tms320f28p550sj.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-15",
+      "output_note": "專業領域/F28P551/TMS320F28P55x Real-Time Microcontrollers 資料手冊分析 (SPRSP85D).md",
+      "source_pdf": "RAW/tms320f28p550sj.pdf",
+      "chip": "C2000 F28P55x family (TMS320F28P550SJ / F28P559SJ-Q1 / F28P550SG / F28P559SG-Q1); companion to existing TRM notes F28P551/*_sprujf8.pdf",
+      "pages_analyzed": "1-295 (standalone full datasheet, 5 parallel chunk-agents p1-60/61-120/121-180/181-240/241-295, orchestrator synthesized, -N no-SDK — whole-chip overview not a single peripheral module)",
+      "flags": "bespoke datasheet structure per user choice (not appnote/paper/trm/spec template) matching am13e23019.pdf/am2754-q1.pdf precedent; 2 chunk-agent runs failed first attempt when a concurrent peer session ran orphan-cleanup on shared RAW/_*.txt temp files mid-flight -- retried with self-heal instruction, all 5 chunks succeeded on retry; note documents 6 internal datasheet inconsistencies (GPIO count 91 vs 65, ePWM hi-res ch 16 vs 12, FSI 200 vs 120 Mbps, flash 1084 vs 1088KB, PMM delay figure vs table, package addendum row anomaly)"
+    },
+    "sluudn8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-15",
+      "output_note": "專業領域/F28P55x/E-Metrology 電能計量函式庫使用指南 (SLUUDN8).md",
+      "source_pdf": "RAW/sluudn8.pdf",
+      "chip": "F28P55x / F28P65x (C2000)",
+      "pages_analyzed": "1-13 (standalone appnote/white-paper, 1 chunk, inline analysis; SDK metrology grep against installed C2000Ware_26_01_00_00 returned zero hits — library ships standalone, not part of installed SDK tree; driverlib ADC context from C2000Ware_26_01_00_00 f28p55x/f28p65x driverlib)"
+    },
+    "Chapter_15_CANOpen_Overview_Delta_C2000_Plus.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-16",
+      "output_note": "專業領域/Networking/CAN_BUS/CANopen Overview (Delta C2000 Plus) 規格書.md",
+      "source_pdf": "RAW/Chapter_15_CANOpen_Overview_Delta_C2000_Plus.pdf",
+      "chip": "N/A -- Delta C2000 Plus AC motor drive (vendor product name unrelated to TI C2000 MCU family); -N flag used to avoid false chip-family match on \"c2000\" substring",
+      "pages_analyzed": "1-35 (standalone, 1 chunk, inline)",
+      "flags": "Filename has no TI doc-ID prefix (spru/spra/slaa/etc) so Step 0 default detection gave type=paper; manually reclassified to type=spec since content is a vendor device-manual reference chapter (CANopen Object Dictionary index tables, NMT state diagram, fault-code lookup table, LED status table) with no abstract/experiments/measured-results -- matches template-spec.md persona (faithful reference for lookup) far better than paper or appnote. Placed under existing Networking/CAN_BUS/ folder alongside CAN Specification 2.0 note (same protocol family)."
+    },
+    "infineon-an204470-fm3-family-position-estimation-of-pmsm-with-signal-injection-applicationnotes-en.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-19",
+      "output_note": "專業領域/Motor_Control/HFI/FM3 Family PMSM 訊號注入位置估測 (AN204470).md",
+      "source_pdf": "RAW/infineon-an204470-fm3-family-position-estimation-of-pmsm-with-signal-injection-applicationnotes-en.pdf",
+      "chip": "N/A -- Infineon/Cypress/Spansion FM3 Family (ARM Cortex-M3), not in tracked TI SDK chip-family table; SDK lookup skipped automatically (no match)",
+      "pages_analyzed": "1-19 (standalone, 1 chunk, inline)",
+      "flags": "Filename has no TI doc-ID prefix so Step 0 default detection gave type=paper; manually reclassified to type=appnote since content (Abstract-equivalent intro, HFI/IPD design methodology with formulas, block diagrams, 4-motor experiment results table, porting-relevant limitations) matches template-appnote.md far better than the reproduction-oriented paper template. PDF equations are vector/glyph objects -- PyMuPDF text extraction lost subscripts and symbols, so all formulas in the note are flagged as reconstructions from standard HFI/IPD literature notation rather than literal transcription; numeric tables (motor params, test results) were extracted cleanly and transcribed verbatim. Placed under existing Motor_Control/HFI/ folder (topic match) rather than the template's default 未分類/, matching vault convention of grouping by topic over chip family when no chip matched."
+    },
+    "IS21TF16G.PDF": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-25",
+      "output_note": "專業領域/Flash Memory/IS21_22TF16G_32G_64G_128G eMMC 資料表分析 (Rev A7).md",
+      "source_pdf": "RAW/IS21TF16G.PDF",
+      "chip": "N/A — ISSI IS21/22TF16G/32G/64G/128G (16-128GB eMMC, TLC NAND + eMMC 5.1 controller); not a TI part, no matching chip-family in skill SDK table",
+      "pages_analyzed": "1-53 (standalone datasheet, 1 chunk, inline, -N no-SDK)",
+      "flags": "Invoked without '@' prefix (bare filename resolved to one existing RAW file, not a directory) -- treated as single-file standalone. Doc-type auto-detect table has no vendor-datasheet category; initially drafted with the spec template, then REDONE with the trm template (register-centric) to match the existing sibling note 'IS21_22EF08G_16G eMMC 資料表分析 (Rev A5).md' already in the same Flash Memory folder (a prior session's deliberate precedent recorded in that entry's flags). Cross-linked both notes' 相關連結 sections. Found and flagged a source-document inconsistency: p.2 FEATURES lists Cache Barrier as supported, but EXT_CSD BARRIER_SUPPORT[486]=0h says unsupported."
+    },
+    "swab013f.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-28",
+      "output_note": "專業領域/C2000/C2000 工業功能安全 (Functional Safety) 架構總覽 (SWAB013F).md",
+      "source_pdf": "RAW/swab013f.pdf",
+      "chip": "C2000 (multi-family: F2838x, F28P65x, F2837x/F2807x, F28P55x, F28003x, F280015x, F28002x, F280013x)",
+      "pages_analyzed": "1-5 (standalone product brief, 1 chunk, inline, -N no-SDK)",
+      "flags": "Doc-ID prefix 'swab' not in trm/appnote auto-detect table -> defaulted to paper, overridden to appnote (TI first-party device/architecture brief, not an academic paper). p.2 safety-feature table required visual Read (image render) to resolve column count -- OCR text order alone was ambiguous (F2837x/F2807x share one column, misread as 9 columns from linear text)."
+    },
+    "sdaa470.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-31",
+      "output_note": "專業領域/AM13Ex/Running DroneCAN Applications on TI AM13E2x 分析 (SDAA470).md",
+      "source_pdf": "RAW/sdaa470.pdf",
+      "chip": "AM13E230x (Arm Cortex-M33, MCAN peripheral); document states applicable to all TI MCUs with the same MCAN peripheral",
+      "pages_analyzed": "1-22 (standalone appnote, 1 chunk, inline, -N no-SDK)",
+      "flags": "-N; filename prefix 'sdaa' not in skill's Step 0 doc-type table but page-1 text explicitly says 'Application Note' -> treated as appnote (not defaulted to paper). Noted an internal document contradiction (SS3.2 p.8 says non-matching extended frames = Reject, SS6 Key Pitfalls p.17 says verify non-matching frames set to accept) -- flagged inline rather than silently resolved."
+    },
+    "energies-12-04776-v2.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-08-19",
+      "output_note": "專業領域/Motor_Control/HFI/High-Frequency Square-Wave Injection IPMSM Sensorless Control 論文分析.md"
+    },
+    "MSPM0G_TRM_I2S_TDM_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/I2S_TDM模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "I2S/TDM (Chapter 34)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G)",
+      "pages_analyzed": "2050-2102 (module mode, Chapter 34 I2S/TDM full chapter, 1 chunk, inline analysis)",
+      "flags": "mspm0 chip-family not in skill's fixed Sub-step A SDK directory table (only am13/am261x/am275x/c2000/c29x listed) -- same manual DL_-prefix grep approach as sibling ADC/OPA/TIMx entries, against local mspm0_sdk_2_11_00_07 source/ti/driverlib/dl_i2s.h/.c (~110 DL_I2S_* functions) + source/ti/devices/msp/peripherals/hw_i2s.h; strong example hits: examples/nortos/LP_MSPM0G5187/driverlib/i2s_controller_transmit_dma (DMA TX), tinyusb/device_uac_microphone_i2s (32-bit target RX), edgeAI/tida_010997_data_capture/sensors/sensor.c (dynamic data-delay reconfig) -- all confirmed via direct Read before citing. Two doc findings flagged in note S11 rather than silently resolved: (1) SLAU846E S34.2.3 prose lists 4 internal clock sources (SYSOSC/HFXT/PLL/EXTCLK) but CLKCFG.DAICLK register field + driverlib enum only encode 3 (no EXTCLK); (2) FMTCFG.WORDLEN is a 'wordlen-1' encoded field (reset 0xF=15 -> actual 16-bit default), inferred by cross-referencing TRM's '8-32 bit' prose against SDK header comment range [7,31] -- TRM body never states the off-by-one explicitly. Concurrency note: this run happened while 2+ other /pdf-analysis sessions were active on the same slau846e.pdf (PMCU ch.5, NVM chapter) -- this session's own in-flight temp file (_I2S_TDM_p2050_2102.txt) was deleted mid-task by another session's Step-0 --orphans purge, same class of bug flagged in the ADC entry, but caused no rework here since the full chapter text had already been Read into context before deletion. Used registry_upsert.py (atomic single-key write) instead of a full read-modify-write to avoid clobbering concurrent peer writes to other registry keys."
+    },
+    "MSPM0G_TRM_NVM_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/NVM模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "NVM / Flash (Chapter 6)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G)",
+      "pages_analyzed": "584-639 (module mode, Chapter 6 NVM full chapter, 1 chunk, inline analysis)",
+      "flags": "mspm0 chip-family not in skill's fixed Sub-step A SDK directory table (only am13/am261x/am275x/c2000/c29x listed) -- same manual DL_-prefix grep approach as sibling ADC/OPA/TIMx/I2S_TDM entries, against local mspm0_sdk_2_11_00_07 source/ti/driverlib/dl_flashctl.h/.c (116 DL_FlashCTL_* functions -- actual naming is mixed-case DL_FlashCTL_*, not DL_FLASHCTL_* as a naive grep on the all-caps macro/enum names would suggest) + source/ti/devices/msp/peripherals/hw_flashctl.h; example hits confirmed via direct Read against examples/nortos/LP_MSPM0L1117/driverlib/flashctl_* (multiple_size_write, multiple_size_read_verify, blank_verify, dynamic_memory_protection, nonmain_memory_write). Three doc findings flagged in note S11 rather than silently resolved: (1) Table 6-4 states flash controller provides 'five basic commands' but CMDTYPE.COMMAND register field (Table 6-23/S6.6.10) actually encodes 6 valid values (0,1,2,3,5,6; 4h unused) including Clear Status(5h) which is only introduced in a Note below Table 6-4, not counted among the five; (2) GBLINFO0.SECTORSIZE field example shows reset=800h (TWOKB) but S6.1.3 Terminology Table 6-1 defines Sector=1024 bytes (ONEKB) -- same document, conflicting sector-size figures; (3) STATADDR register is referenced by name 5x in running prose (S6.3.3.5/6.3.4.2/6.3.5.1/6.3.6.1, readable post-operation for bank ID/region ID/bank address) but does NOT appear in Table 6-12's register map nor get its own S6.6.x detail subsection anywhere in the extracted chapter (p584-639, which is the full TOC-detected chapter range) -- a genuine TRM gap, not a chunking artifact. SDK also exposes DL_FlashCTL_enableStairStepErase/disbleStairStepErase (SDK header has a typo: 'disble') with no corresponding 'stair-step erase' mechanism described anywhere in this chapter's extracted text -- marked as SDK-only, TRM-silent. Concurrency note: this run happened while other /pdf-analysis sessions were active on the same slau846e.pdf (peer session 'llm-wiki-cc' running PMCU ch.5, 5 chunk-agents pages 228-469); this session's Step-0 --orphans purge (run before the peer's cross-session warning arrived) deleted the peer's in-flight _PMCU_p*.txt files -- acknowledged via SendMessage and did not run --orphans again afterward. Used registry_upsert.py (atomic single-key write) instead of a full read-modify-write to avoid clobbering concurrent peer writes to other registry keys."
+    },
+    "MSPM0G_TRM_DMA_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/DMA模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "DMA (Chapter 5 Direct Memory Access)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (G351x/G151x/G321x/G320x/G121x/G120x/G122x/G322x/G511x/G5187)",
+      "pages_analyzed": "523-583 (Chapter 5 DMA 全章, 61 pages, module mode, 2 parallel chunk-agents: 523-582/583-583, orchestrator synthesis)",
+      "flags": "mspm0 chip-family not in skills fixed Sub-step A SDK directory table (only am13/am261x/am275x/c2000/c29x listed) -- same manual DL_-prefix grep approach as sibling ADC/OPA/TIMx/PMCU/I2S_TDM/NVM entries, against local mspm0_sdk_2_11_00_07 source/ti/driverlib/dl_dma.h/.c (55 deduped DL_DMA_* functions) + source/ti/devices/msp/peripherals/hw_dma.h. Verified DL_DMA_Config struct fields and DL_DMA_TRANSFER_MODE/DL_DMA_EXTENDED_MODE/DL_DMA_WIDTH/DL_DMA_INCREMENT/DL_DMA_BURST_SIZE enum names directly against dl_dma.h before citing in note SS12 (chunk-1 agent had flagged it skipped this verification). SDK example refs from LP_MSPM0G3507 (correct G-series board, confirmed via direct grep of dma_block_transfer.c/dma_fill_data.c/dma_table_transfer.c/crc_calculate_checksum_dma.c/adc12_max_freq_dma.c) with line numbers. Found and flagged verbatim in note SS11 (not silently resolved): (1) genuine TRM-vs-SDK contradiction on fixed channel priority direction -- TRM prose (SS5.2.7) says DMA0 is highest priority descending to DMA15, but dl_dma.h DL_DMA_disableRoundRobinPriority comment says Channel 0 is the lowed [sic, lowest] priority -- opposite direction, plus the SDK comment has its own typo; (2) SDK enum macro typos DMA_DMAPRIO_BURSTSZ_INFINITI (->INFINITY) and BUSRT_16 (->BURST_16), noted as cosmetic since the public DL_DMA_BURST_SIZE_* names are correct; (3) a likely OCR-mangled attribute directive for 128-bit alignment in the extracted PDF text, flagged as unconfirmed rather than silently reconstructed. Chunking anomaly: chapter is 61 pages (523-583), one page over the skills 60-page single-chunk threshold, so per the skills fixed chunk-boundary formula it split into a 60-page chunk-1 (523-582) and a 1-page chunk-2 (583-583 only) -- same lopsided-tail-chunk pattern already seen in the PMCU entry (468-469) and I2S_TDM entry; both chunk-agents dispatched in parallel as the skill specifies for >60-page single-file mode, not merged into one call. Concurrency: 4 other /pdf-analysis sessions were active on this same slau846e.pdf during this run (Events/EventFabric/CPU/other chapters); one sessions unscoped Step-0 pdf_cleanup.py --orphans deleted this runs first chapter-boundary temp JSON before it was re-read, but this happened before any page-text extraction, so no rework was needed -- re-ran the TOC --search with a pid-suffixed unique filename and confirmed chapter_start=523/chapter_end=583 before proceeding; acknowledged the collision via SendMessage to the peer session and did not run --orphans again this session."
+    },
+    "MSPM0G_TRM_Security_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/Security模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "Security (Chapter 4 -- SECURITY)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers",
+      "pages_analyzed": "504-522 (Chapter 4 SECURITY full chapter, 19 pages, module mode, -N flag: SDK lookup skipped, 1 chunk, inline analysis in main conversation)",
+      "flags": "pdf_toc.py --search Security first-match landed on an unrelated level-5 subsection (1.4.2.1.1 SWD Security Level 0, p23) because the search returns first document-order hit regardless of level; re-ran with the more specific query 4 SECURITY to land on the correct chapter (p504-522). Also flagged in note S5.2: FWEPROTMAIN is 32 bits, 1 bit per sector, and the chapter text states CSC write-protect only covers the first 32KB of flash -- deriving sector size = 32KB / 32 bits = 1KB, which corroborates the 1KB terminology-table figure over the 2KB reset-value figure already flagged as a document-internal conflict in the sibling MSPM0G_TRM_NVM_slau846e.pdf entry. Concurrency note: peer session llm-wiki-38 ran Step-0 pdf_cleanup.py --orphans on RAW/ while starting module Events on the same slau846e.pdf, deleting this run temp files (_chapter.json, _Security_p504_522.txt) mid-task -- no rework needed since the full chapter text had already been Read into context before deletion; peer said it would not run --orphans again this session. This session own leftover _toc_full.json (used to locate the chapter via a full-TOC grep fallback) was cleaned up separately after use."
+    },
+    "MSPM0G_TRM_UNICOMM_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/UNICOMM模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "UNICOMM",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G)",
+      "flags": "mspm0 chip-family not in skills fixed Sub-step A SDK directory table (only am13/am261x/am275x/c2000/c29x listed) -- same manual DL_-prefix grep approach as sibling ADC/OPA/TIMx/I2S_TDM/NVM entries, against local mspm0_sdk_2_11_00_07 (dl_unicomm.h: 7 DL_UNICOMM_* functions + 1 enum; dl_spgss.h: 10 DL_SPGSS_* functions + 3 enums + 1 struct -- this second header was NOT caught by the DL_UNICOMM/DL_UART/DL_SPI/DL_I2C search-term grep and had to be found via a broader grep for DL_SPGSS_ once the TRM text referenced a SPG-level Loopback/Pairing register the first grep pass had not surfaced). hw register headers hw_unicomm.h + hw_spgss.h confirmed via direct Read. Real example usage confirmed for DL_UNICOMM_reset/enablePower/setIPMode (examples/nortos/LP_MSPM0G5187/bsl/bsl_uart_flash_interface/bsl_uart.c:121-123 and bsl_i2c_flash_interface/bsl_i2c.c:120-122, one calling with the raw UNICOMM_IPMODE_SELECT_UART macro and the other with the DL_UNICOMM_I2C_TARGET enum -- both confirmed equivalent); zero real (non-bundled-driverlib-copy) example calls any DL_SPGSS_* function anywhere in the SDK examples tree (checked all boards) -- 範例出處 column is all -- for that table. Three doc findings flagged in note S11 rather than silently resolved: (1) S27.3 step 4b states I2C pairing is max one pair per SPG, but S27.4.2 register table lists PAIR0-PAIR7 (8 pairs) -- direct contradiction within the same chapter; (2) LPBK0/LPBK1 (generic same-protocol SPG loopback) is named in the S27.3 init sequence but has zero bit-field documentation anywhere in S27.4 despite that section being titled SPG Registers -- confirmed via hw_spgss.h that the register exists (offset 1120h/1124h) with no driverlib wrapper either; (3) CPU_INT/DMA_CHAIN0/DMA_CHAIN1/DMA_CHAIN SPGSS register groups (confirmed present in hw_spgss.h) are entirely unmentioned anywhere in the extracted chapter text (not a chunking artifact -- this is the full 21-page chapter). Also flagged as a functional trap (not just a doc gap): dl_spgss.h enum names DL_SPGSS_PAIR_CONTROLLER_UC0_ through _UC15_ literally spell out UC-instance-looking numbers but the TRM text (S27.2.1.1) defines the actual semantics as a SPG-relative local index, not the absolute UCx instance number -- using the enum literally for an absolute instance would silently pair the wrong instances. Concurrency note: this run happened on a document with heavy concurrent peer activity (4 other busy sessions at start, several sibling MSPM0G_TRM_* entries already IN_PROGRESS/DONE with documented --orphans-purge collisions) -- checked ListAgents and RAW/ temp-file timestamps before Step 0, found two fresh (~1min old) peer temp files, and deliberately skipped the skills mandatory Step-0 pdf_cleanup.py --orphans sweep this run to avoid repeating that exact documented incident; used a module-unique chapter-lookup filename (_chapter_UNICOMM.json instead of the skills example _chapter.json) to avoid colliding with a peer mid-lookup. This session own in-flight temp files (_chapter_UNICOMM.json, _UNICOMM_p1474_1494.txt) were confirmed deleted by another peers unscoped orphan purge sometime after extraction -- no rework needed since the full 21-page chapter text had already been Read into context before deletion. Used registry_upsert.py (atomic single-key write) throughout instead of a full read-modify-write to avoid clobbering concurrent peer writes to other registry keys."
+    },
+    "MSPM0G_TRM_Events_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/Events模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "Events (Chapter 7, Event Manager)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G)",
+      "pages_analyzed": "640-649 (module mode, Chapter 7 Events, 1 chunk, inline)",
+      "flags": "Chip family MSPM0 not in skill's fixed Sub-step A table (am13/am261x/am275x/c2000/c29x only) -- same manual approach as sibling entries: grepped local mspm0_sdk_2_11_00_07 directly. Module name resolution note: pdf_toc.py --search \"Events\" first matched the wrong target, a 2-page subsection \"2.4.11 SYSCTL Events\" (p.285-286) inside the SYSCTL/PMCU chapter, rather than the actual top-level \"Chapter 7 Events\" (p.640-649) -- caught because the match was inconsistent with sibling entries (all full top-level peripheral chapters) and its 2-page size didn't fit an Events-module request; located the real chapter boundary manually via pdf_extract probing (p.640 start confirmed by 'Chapter 7 \\nEvents' banner text, p.649/650 boundary confirmed by 'Chapter 8 \\nIOMUX' banner appearing on p.650). No dedicated dl_event.c/h in the SDK -- confirmed via grep across source/ti/driverlib and source/ti/devices: Event Manager per TRM S7.2 explicitly 'does not contain any configuration registers', Publisher/Subscriber config is implemented per-peripheral (DL_GPIO_setPublisherChanID/setSubscriberChanID/configSubscriber/enableSubscriber in dl_gpio.h; DL_ADC12_setPublisherChanID/setSubscriberChanID in dl_adc12.h; DL_Timer_setPublisherChanID/setSubscriberChanID in dl_timer.h with DL_TimerG_* macro redirects) -- all function signatures Read-confirmed, and 2 example files (event_input_triggers_output, adc12_triggered_by_timer_event under LP_MSPM0G5187/LP_MSPM0L1117) Read-confirmed to actually call them before citing. DESC_EX register (TRM S7.2.4, read-only, reports device's generic channel count) has zero hits anywhere in the full mspm0_sdk_2_11_00_07 tree (only unrelated USB CDC descriptor macro false-positives) -- flagged in note S5.1/S11/S13 as SDK-silent rather than guessing a register address. Concurrency note: this run happened while 4 peer /pdf-analysis sessions were active on slau846e.pdf (CPU ch.3, Security ch.4, DMA ch.5, plus one more) -- my own Step-0 --orphans purge deleted 4 files before I checked the DMA IN_PROGRESS registry entry; sent SendMessage heads-up to all 4 peers, all confirmed no rework needed (had already Read their chunk text or hadn't extracted yet), did not run --orphans again this session, deleted only my own exact-named probe/temp files via pdf_cleanup.py explicit-path mode."
+    },
+    "MSPM0G_TRM_GPAMP_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-14",
+      "output_note": "專業領域/MSPM0G/GPAMP模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "GPAMP (Chapter 22 -- General Purpose Amplifier: chopper-stabilized rail-to-rail op-amp, single PMUOPAMP control register)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G350x/G310x/G150x/G110x)",
+      "pages_analyzed": "1223-1227 (Chapter 22 GPAMP 全章, 5 pages, module mode, 1 chunk, inline)",
+      "flags": "Chip family MSPM0 not in skill's fixed Sub-step A table (am13/am261x/am275x/c2000/c29x only) -- same manual approach as sibling MSPM0G entries: grepped local mspm0_sdk_2_11_00_07 directly (source/ti/driverlib/dl_gpamp.h, 18 DL_GPAMP_* functions, all inline -- no dl_gpamp.c body). GPAMP has no dedicated peripheral base address/register struct -- all control goes through a single SYSCTL->SOCLOCK.PMUOPAMP register; confirmed exact bit offsets/masks (ENABLE b0, PCHENABLE b1, NSEL b3:2, RRI b5:4, OUTENABLE b6, CHOPCLKFREQ b9:8, CHOPCLKMODE b11:10) via source/ti/devices/msp/peripherals/m0p/sysctl/hw_sysctl_mspm0g1x0x_g3x0x.h since TRM Chapter 22 itself only states \"PMUOPAMP is in the SYSCTL registers\" without a bit-field table (documented as intentional TRM cross-reference in note SS11/SS13). Confirmed both real SDK examples (LP_MSPM0G3507/driverlib/gpamp_buffer_to_adc, gpamp_general_purpose_rri) call DL_GPAMP_init/setRailToRailInputMode/enable with real config values via direct Read of ti_msp_dl_config.c. Found and reported a genuine TRM/SDK gap: TRM Table 22-1 (SS22.2.1) lists only 2 CHOPCLKMODE options (Standard Chop/Disabled), but dl_gpamp.h defines a 3rd DL_GPAMP_CHOPPING_MODE_ADC_ASSISTED gated on GPAMP_SYS_ADC_CHOPPING, confirmed defined (=1) in this TRM's own device variant headers (mspm0g350x.h, mspm0g110x.h, mspm0g150x.h, mspm0g310x.h) -- flagged in note SS11 rather than silently ignored. TOC --search for query \"GPAMP\" matched cleanly first try (single top-level Chapter 22, no substring collision unlike the earlier CPU/OPA entries' \"Propagation\"/\"CPUCLK\" false matches)."
+    },
+    "MSPM0G_TRM_VREF_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-15",
+      "output_note": "專業領域/MSPM0G/VREF模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "VREF (Chapter 23 -- Voltage Reference: internal 1.4V/2.5V buffer, external ref input, ADC/COMP/DAC/OPA interface, Sample and Hold mode)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G)",
+      "pages_analyzed": "1228-1241 (Chapter 23 VREF 全章, 14 pages, module mode, 1 chunk, inline)",
+      "flags": "Chip family MSPM0 not in skill's fixed Sub-step A table (am13/am261x/am275x/c2000/c29x only) -- same manual approach as sibling MSPM0G entries: grepped/read local mspm0_sdk_2_11_00_07 directly (source/ti/driverlib/dl_vref.h/.c, 18 DL_VREF_* functions; hw register header source/ti/devices/msp/peripherals/hw_vref.h). Read dl_vref.c bodies (not just header declarations) to confirm DL_VREF_configReference() only writes CTL0.ENABLE0/BUFCONFIG/SHMODE + CTL2 -- it does NOT set ENABLE1/ENABLE2, flagged as a pitfall in note SS11 since COMP/ADC internal-ref routing needs separate DL_VREF_enableInternalRefCOMP/ADC calls. TRM prose only ever calls the three CTL0 enable bits generic 'reference buffer 0/1/2' and never states which peripheral buffer 1 vs buffer 2 belongs to -- that mapping (ENABLE1=COMP_VREF_ENABLE, ENABLE2=ADC_VREF_ENABLE) exists only in hw_vref.h's backward-compatible macro aliases, reported as a documentation gap in note SS1/SS11 rather than silently asserted as TRM content. Confirmed SDK examples via grep -n: adc12_single_conversion_vref_internal.c (LP_MSPM0G5187, G-series match) for DL_VREF_getStatus usage, and three boards' SysConfig-generated ti_msp_dl_config.c (LP_MSPM0G5187/G3507/G3519) for the full init sequence (reset/enablePower/setClockConfig/configReference) -- all cited with real file:line. CLKDIV.RATIO divide-ratio encoding (0/1/3/5/7 -> divide 1/2/4/6/8) is not given anywhere in the TRM text itself, only in the DL_VREF_CLOCK_DIVIDE SDK enum -- labeled as SDK-sourced, not TRM-sourced, in note SS2.3/SS9. TRM's own S23.2.4 Sample-and-Hold clock-restriction sentence is internally asymmetric (the BUSCLK-or-LFCLK restriction sentence cites 'LFCLK will not be available' as the reason even when BUSCLK is the one selected) -- transcribed verbatim in note SS3.4 rather than silently smoothed over. No registry key collision with the existing MSPM0_TRM_ADC_slau846e.pdf (missing-G) naming inconsistency from an earlier entry -- this entry follows the majority MSPM0G_TRM_<module>_slau846e.pdf pattern used by all other sibling entries."
+    },
+    "MSPM0G_TRM_UNICOMM-UART_slau846e.pdf": {
+      "status": "IN_PROGRESS",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "UART (Chapter 24, UNICOMM substrate)"
+    },
+    "MSPM0G_TRM_UNICOMM-I2C_slau846e.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-09-15",
+      "output_note": "專業領域/MSPM0G/UNICOMM-I2C模組分析 (SLAU846E).md",
+      "source_pdf": "RAW/slau846e.pdf",
+      "module": "I2C (Chapter 25, UNICOMM substrate protocol chapter; Chapter 27 UNICOMM covers the shared architecture separately)",
+      "chip": "MSPM0 G-Series 80MHz Microcontrollers (MSPM0G)",
+      "pages_analyzed": "1322-1413 (Chapter 25 I2C full chapter, 92 pages, module mode, 2 parallel chunk-agents: 1322-1381/1382-1413, orchestrator synthesis; chunk-2 agent was interrupted mid-run by a prior session ending and was resumed via SendMessage before it produced its final chunk-analysis block)",
+      "flags": "Chip family MSPM0 not in skill's fixed Sub-step A table (am13/am261x/am275x/c2000/c29x only) -- same manual approach as sibling MSPM0G entries: grepped local mspm0_sdk_2_11_00_07 directly. Major finding, commander-verified via direct grep (not just trusted from the chunk-agent report): this SDK version ships TWO structurally different I2C register views. (1) hw_i2c.h's I2C_Regs (with I2C_MASTER_Regs/I2C_SLAVE_Regs sub-structs, used by the generic DL_I2C_* API in dl_i2c.h) matches Chapter 25's own register table AND narrative text EXACTLY, offset-for-offset (GFCTL=1200h, TIMEOUT_CTL=1204h, TIMEOUT_CNT=1208h, MASTER block MSA/MCTR/MSR/MRXDATA/MTXDATA/MTPR/MCR/MBMON/MFIFOCTL/MFIFOSR at 1210h-123Ch, SLAVE block SOAR/SOAR2/SCTR/SSR/SRXDATA/STXDATA/SACKCTL/SFIFOCTL/SFIFOSR at 1250h-1270h) -- confirmed the chapter's own dual naming (Table 25-21 short codes CSA/CCTR/CSR/... vs narrative MSA/MCTR/MSR/...) both refer to this one real register set, not a document error. (2) hw_unicommi2cc.h/hw_unicommi2ct.h's UNICOMM_Inst_Regs (used by the role-specific DL_I2CC_*/DL_I2CT_* API in dl_unicommi2cc.h/dl_unicommi2ct.h) defines a COMPLETELY DIFFERENT, more compact register layout at 1100h-1158h (CTR/CR/SR/IFLS/TPR/GFCTL(1118h)/BMON/TXDATA/RXDATA/PECSR/TA/TIMEOUT_CNT(1150h)/TIMEOUT_CTL(1154h)/PECCTL) that Chapter 25's extracted text never mentions at all -- initially the chunk-2 subagent grepped only hw_unicommi2cc.h and wrongly concluded a PDF-vs-SDK offset mismatch for GFCTL/TIMEOUT_CTL/TIMEOUT_CNT; commander caught this by also grepping hw_i2c.h and finding an exact match there, then traced dl_i2c.h's macros (DL_I2C_CONTROLLER_STATUS_ERROR etc.) to I2C_MSR_*/I2C_MSA_* confirming hw_i2c.h is the header Chapter 25 actually documents. Documented this as an open TRM-scope gap in note S11 (row 1) rather than resolving which of DL_I2C_* vs DL_I2CC_*/DL_I2CT_* is 'correct' -- that depends on the UCx instance's Advanced/Basic/Minimum I2C tier per the sibling UNICOMM note's Table 27-1 ability matrix, which this chapter doesn't cross-reference. Confirmed real code snippets (not pseudocode) for section 10 via direct Read of two SDK examples: LP_MSPM0G3507/msp_subsystems/i2c_host_controller/i2c_controller.c:185-217 (Controller fillTXFIFO/startControllerTransfer/getControllerStatus flow, incl. confirming DL_I2C_CONTROLLER_STATUS_IDLE/_BUSY_BUS/_ERROR and DL_I2C_CONTROLLER_DIRECTION_TX macros exist in dl_i2c.h) and i2c_target_io_expander/i2c_target.c:113-152 (Target receiveTargetData/transmitTargetDataCheck/getTargetStatus flow). Two document-internal issues transcribed verbatim rather than corrected: TCTR/CCTR narrative text says 'RUN' where the register table field is actually named BURSTRUN; TFIFOCTL.TXTRIG bit-encoding table only shows codes 4h-7h on its extracted page (0h-3h missing, flagged as a likely page-break extraction artifact, not invented). Concurrency note: a peer session was actively working MSPM0G_TRM_UNICOMM-UART_slau846e.pdf (Chapter 24) at the same time (registry entry left IN_PROGRESS) -- confirmed via ListAgents (2 busy peers) and RAW/ timestamps that its temp files were untouched by this run's own Step-0 --orphans sweep (which ran before the peer's files existed) and this run's own cleanup used exact-path pdf_cleanup.py calls only, never --orphans again, to avoid deleting the peer's in-flight chunks."
+    }
+  }
+}
