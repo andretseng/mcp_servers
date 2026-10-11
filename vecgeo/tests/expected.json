@@ -1,0 +1,125 @@
+{
+ "cases": [
+  {
+   "name": "spi",
+   "page": 0,
+   "bbox": [
+    52.6,
+    72.0,
+    559.4,
+    315.7
+   ],
+   "params": {
+    "tSU_nSCS": {
+     "start": {
+      "lane": 0,
+      "kind": "falling"
+     },
+     "end": {
+      "lane": 1,
+      "kind": "rising"
+     }
+    },
+    "tDLY_SDO": {
+     "start": {
+      "lane": 1,
+      "kind": "rising"
+     },
+     "end": {
+      "lane": 3,
+      "kind": "transition"
+     }
+    },
+    "tDIS_SDO": {
+     "start": {
+      "lane": 0,
+      "kind": "rising"
+     },
+     "end": {
+      "lane": 3,
+      "kind": "to_highz"
+     }
+    }
+   },
+   "sampling_edge": {
+    "lane": 1,
+    "kind": "falling"
+   }
+  },
+  {
+   "name": "deadtime",
+   "page": 1,
+   "bbox": [
+    132.9,
+    409.8,
+    476.3,
+    609.2
+   ],
+   "params": {
+    "tDEAD": {
+     "start": {
+      "lane": 0,
+      "kind": "falling",
+      "level_pct": 10
+     },
+     "end": {
+      "lane": 1,
+      "kind": "rising",
+      "level_pct": 10
+     }
+    }
+   },
+   "first_mover_lane": 0
+  },
+  {
+   "name": "prop_slvaf84",
+   "pdf": "slvaf84_p2.pdf",
+   "page": 0,
+   "bbox": [
+    180,
+    136.8,
+    439.2,
+    259.2
+   ],
+   "params": {
+    "tPD": {
+     "start": {
+      "lane": 0,
+      "kind": "rising"
+     },
+     "end": {
+      "lane": 1,
+      "kind": "rising",
+      "level_pct": 20
+     }
+    }
+   },
+   "first_mover_lane": 0
+  },
+  {
+   "name": "prop_drv8311",
+   "pdf": "drv8311_p35.pdf",
+   "page": 0,
+   "bbox": [
+    144,
+    158.4,
+    464.4,
+    320.4
+   ],
+   "params": {
+    "tPD": {
+     "start": {
+      "lane": 0,
+      "kind": "rising"
+     },
+     "end": {
+      "lane": 1,
+      "kind": "rising",
+      "level_pct": 10
+     }
+    }
+   },
+   "first_mover_lane": 0
+  }
+ ]
+}
