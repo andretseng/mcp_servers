@@ -1,0 +1,38 @@
+{
+  "providers": {
+    "omlx": {
+      "baseUrl": "http://dreammaker.tail1f5a73.ts.net:8000/v1",
+      "api": "openai-completions",
+      "apiKey": "!cat /home/andre/.config/omlx/key",
+      "models": [
+        {
+          "id": "Ornith-1.5-35B-A3B-MLX-8bit",
+          "name": "Ornith 35B (work-run)",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 32768,
+          "samplingParams": {
+            "temperature": 0.3,
+            "top_p": 0.95,
+            "top_k": 20
+          }
+        },
+        {
+          "id": "Qwen3.8-27B-Abliterated-MLX-4bit",
+          "name": "Qwen3.8 27B abliterated 4bit (work-run)",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 65536,
+          "samplingParams": {
+            "temperature": 1.0,
+            "top_p": 0.95,
+            "top_k": 20,
+            "min_p": 0,
+            "presence_penalty": 0,
+            "repetition_penalty": 1.0
+          }
+        }
+      ]
+    }
+  }
+}

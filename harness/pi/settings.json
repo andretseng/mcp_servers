@@ -1,0 +1,15 @@
+{
+  "lastChangelogVersion": "1.4.0",
+  "deviceId": "173be2fe-9333-42a0-b4d8-bbf06bdf02de",
+  "defaultProvider": "dreammaker",
+  "defaultModel": "Ornith-1.5-35B-A3B-MLX-8bit",
+  "packages": [
+    "npm:pi-web-access@0.39.0",
+    "npm:@johnnywu/pi-subagents"
+  ],
+  "defaultThinkingLevel": "high",
+  "modelThinkingLevels": {
+    "dreammaker/Ornith-1.5-35B-A3B-MLX-8bit": "off",
+    "dreammaker/Qwen3.8-27B-4bit-MTP": "xhigh"
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "CCS Operate"
+  short_description: "Operate CCStudio directly from engineering plans"
+  default_prompt: "Use $ccs-operate whenever this task needs CCStudio; derive and execute the required CCS operations, then return raw evidence for review."

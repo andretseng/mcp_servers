@@ -1,0 +1,168 @@
+/**
+ * Review Gate extension: forces an adviser review before a run that changed files may finish,
+ * forces a disposition for each review, and routes disagreements to Codex (final authority
+ * unless objective evidence). Logic lives in core.ts. DEFAULT OFF since 2026-10-24 (user: the field flow is the harness only, no LLM reviewer or final editor).
+ * PI_REVIEW_GATE=on turns it on (a run that used any tool needs a review, answers included); PI_REVIEW_GATE=changed reviews only runs that changed files;
+ * PI_REVIEW_GATE=always requires a review for every run; unset or PI_REVIEW_GATE=off keeps it disabled.
+ * PI_REVIEW_ARBITER=omlx makes omlx the final arbiter instead of codex (testing only).
+ * Note: a --tools allowlist hides review_disposition ("Tool not found"); add it to the list.
+ */
+
+import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { isAbsolute, resolve } from "node:path";
+import { Type } from "@earendil-works/pi-ai";
+import { defineTool, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import {
+	newState,
+	nextAction,
+	parseBridgeCall,
+	recordEdit,
+	recordWork,
+	recordReview,
+	checkToolCall,
+	dispositionRecord,
+	runEndRecord,
+	bashChangesFiles,
+	type RequestInfo,
+	setDisposition,
+	MAX_NUDGES,
+} from "./core.ts";
+
+/** Append one record to the review ledger (same directory the adviser bridge writes). */
+function ledgerAppend(file: string, record: unknown): void {
+	if ((process.env.ADVISER_LEDGER ?? "on").toLowerCase() === "off") return;
+	try {
+		const dir = process.env.ADVISER_LEDGER_DIR || resolve(homedir(), ".local", "state", "adviser-ledger");
+		mkdirSync(dir, { recursive: true });
+		const path = resolve(dir, file);
+		const fresh = !existsSync(path);
+		appendFileSync(path, JSON.stringify(record) + "\n", "utf8");
+		if (fresh) chmodSync(path, 0o600);
+	} catch {
+		// the ledger must never break a run
+	}
+}
+
+/** Read consult_index and context_id from the --request file named in a bridge command. */
+function readRequest(command: string, cwd: string): RequestInfo | null {
+	const file = /--request\s+(\S+)/.exec(command)?.[1];
+	if (!file) return null;
+	const dir = /(?:^|[;&]\s*)cd\s+(\S+)/.exec(command)?.[1];
+	const base = dir ? (isAbsolute(dir) ? dir : resolve(cwd, dir)) : cwd;
+	try {
+		const data = JSON.parse(readFileSync(isAbsolute(file) ? file : resolve(base, file), "utf8"));
+		return { consult_index: data.consult_index, context_id: data.context_id, data_classification: data.data_classification };
+	} catch {
+		return null;
+	}
+}
+
+export default function (pi: ExtensionAPI) {
+	if (!["on", "changed", "always"].includes(process.env.PI_REVIEW_GATE ?? "off")) return;   // default off (2026-10-24): the harness only, no LLM reviewer
+	// When on: a run that used any tool (not only one that changed files) needs an adviser review before it may report the job finished.
+	// PI_REVIEW_GATE=changed: files changed only.
+	const reviewEveryAnswer = process.env.PI_REVIEW_GATE !== "changed";
+
+	const arbiter = process.env.PI_REVIEW_ARBITER || "codex";
+	let state = newState(arbiter);
+	let executor = "pi:unknown";
+
+	pi.registerTool(
+		defineTool({
+			name: "review_disposition",
+			label: "Review disposition",
+			description:
+				"Record whether you adopt or reject the latest adviser review. Required after every " +
+				"completed review. 'reject' sends the matter to Codex, whose decision is final unless " +
+				"you give objective counter-evidence.",
+			parameters: Type.Object({
+				verdict: Type.Union([Type.Literal("adopt"), Type.Literal("reject")]),
+				reason: Type.String({ description: "Why you adopt or reject." }),
+				evidence: Type.Optional(
+					Type.String({ description: "Objective evidence (test output, spec line, measurement) for a reject." }),
+				),
+				restricted: Type.Optional(
+					Type.Boolean({ description: "True if the data is restricted and cannot go to Codex." }),
+				),
+			}),
+			async execute(_id, params) {
+				const text = setDisposition(state, params);
+				ledgerAppend("dispositions.jsonl", dispositionRecord(state, executor, params));
+				return { content: [{ type: "text", text }], details: params };
+			},
+		}),
+	);
+
+	pi.on("agent_start", async (_event, ctx) => {
+		state = newState(arbiter);
+		executor = `pi:${ctx.model?.provider ?? "unknown"}/${ctx.model?.id ?? "unknown"}`;
+		process.env.ADVISER_EXECUTOR = executor; // inherited by the bash tool, read by the bridge
+		// Test/strict mode: require a review even when no file was changed (e.g. Q&A tasks).
+		if (process.env.PI_REVIEW_GATE === "always") state.changedFiles = true;
+	});
+
+	pi.on("tool_call", async (event, ctx) => {
+		const input = event.input as Record<string, unknown>;
+		const request = event.toolName === "bash" ? readRequest(String(input.command ?? ""), ctx.cwd) : null;
+		if (request?.data_classification) state.classification = request.data_classification;
+		const reason = checkToolCall(state, event.toolName, input, request);
+		return reason ? { block: true, reason: `review-gate: ${reason}` } : undefined;
+	});
+
+	pi.on("tool_result", async (event) => {
+		if ((event as { isError?: boolean }).isError === true) return undefined;
+		if (event.toolName === "write" || event.toolName === "edit") {
+			recordEdit(state);
+		} else if (event.toolName === "bash") {
+			const command = String(event.input.command ?? "");
+			const text = event.content.map((c) => (c.type === "text" ? c.text : "")).join("");
+			const review = parseBridgeCall(command, text, arbiter);
+			if (review) recordReview(state, review);
+			else if (bashChangesFiles(command)) recordEdit(state);
+			else if (reviewEveryAnswer && !command.includes("adviser_bridge.py") && !command.includes("adviser_review.py")) recordWork(state);
+		} else if (reviewEveryAnswer && event.toolName !== "review_disposition") {
+			recordWork(state);
+		}
+		return undefined;
+	});
+
+	pi.on("agent_settled", async () => {
+		if (state.reviews.length > 0 || state.changedFiles) ledgerAppend("dispositions.jsonl", runEndRecord(state, executor));
+	});
+
+	pi.on("agent_before_settle", async (event, ctx) => {
+		if (event.outcome !== "completed") return undefined;
+		const action = nextAction(state);
+		if (action.kind === "ok" && state.violations.length > 0 && !state.reportedViolations) {
+			state.reportedViolations = true;
+			if (ctx.hasUI) ctx.ui.notify(`review-gate: ${state.violations.join("; ")}`, "warning");
+			return { entries: [{ type: "custom", customType: "review-gate", data: { violations: state.violations } }] };
+		}
+		if (action.kind === "ok") return undefined;
+		if (action.kind === "escalate") {
+			if (state.escalated) return undefined; // already told once; let the run end
+			state.escalated = true;
+			if (ctx.hasUI) ctx.ui.notify("review-gate: escalating to the user", "warning");
+			return {
+				entries: [
+					{ type: "custom", customType: "review-gate", data: { status: "ESCALATED", message: action.message } },
+					{ type: "custom_message", customType: "review-gate", display: true, content: action.message },
+				],
+				continue: true,
+			};
+		}
+		state.nudges += 1;
+		return {
+			entries: [
+				{
+					type: "custom_message",
+					customType: "review-gate",
+					display: true,
+					content: `${action.message} (reminder ${state.nudges}/${MAX_NUDGES})`,
+				},
+			],
+			continue: true,
+		};
+	});
+}

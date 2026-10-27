@@ -1,0 +1,4 @@
+interface:
+  display_name: "Handoff"
+  short_description: "Write a portable handoff doc for the next agent session"
+  default_prompt: "Use $handoff to compress this session into a portable markdown handoff document for a different agent session to pick up."

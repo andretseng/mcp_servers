@@ -1,0 +1,4 @@
+interface:
+  display_name: "Logic2 Operate"
+  short_description: "Operate Logic2 captures, decoders, and exports"
+  default_prompt: "Use $logic2-operate to capture, decode, measure, and export with Logic2 built-ins."

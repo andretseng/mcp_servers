@@ -1,0 +1,87 @@
+model = "gpt-5.6-sol"
+model_reasoning_effort = "low"
+service_tier = "default"
+approvals_reviewer = "user"
+model_provider = "openai"
+model_catalog_json = "/home/andre/.codex/model-catalog.json"
+[projects."/home/andre/llm-wiki"]
+trust_level = "trusted"
+
+[projects."/home/andre"]
+trust_level = "trusted"
+
+[projects."/home/andre/investment"]
+trust_level = "trusted"
+
+[projects."/home/andre/workspace_ccstheia/industrial_comm"]
+trust_level = "trusted"
+
+[projects."/home/andre/workspace_ccstheia/kicad"]
+trust_level = "trusted"
+
+[projects."/home/andre/workspace_ccstheia/motor"]
+trust_level = "trusted"
+
+[projects."/home/andre/.codex/skills/execute-with-adviser"]
+trust_level = "trusted"
+
+[projects."/home/andre/workspace_ccstheia/drone"]
+trust_level = "trusted"
+
+[projects."/home/andre/workspace_ccstheia"]
+trust_level = "trusted"
+
+[projects."/home/andre/workspace_ccstheia/motor/dual_axis_servo_drive_fcl_qep_f28p55x"]
+trust_level = "trusted"
+
+[projects."/home/andre/workspace_ccstheia/mspm0+"]
+trust_level = "trusted"
+
+[projects."/home/andre/tools"]
+trust_level = "trusted"
+
+[tui]
+screen_reader_detection_done = true
+
+[tui.model_availability_nux]
+"gpt-5.6-sol" = 2
+gpt-6-astra = 4
+"gpt-6.1-sol" = 4
+
+[features]
+hooks = true
+
+[hooks.state."/home/andre/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:ab7eecce525700c42efb8ea110811febc1d84165bff60d26fc61d6b09188cb11"
+
+[marketplaces.diagram-design]
+source_type = "git"
+source = "https://github.com/cathrynlavery/diagram-design.git"
+
+[plugins."diagram-design@diagram-design"]
+enabled = true
+
+[notice.model_migrations]
+"gpt-5.6-sol" = "gpt-6-sol"
+
+[[skills.config]]
+path = "/home/andre/.codex/skills/am13-serial/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/home/andre/.codex/skills/ccs-operate/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/home/andre/.agents/skills/codex-mcp-to-pi/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/home/andre/.codex/skills/logic2-operate/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/home/andre/.codex/skills/motor-safety/SKILL.md"
+enabled = false
+
+

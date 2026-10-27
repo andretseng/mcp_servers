@@ -3393,6 +3393,16 @@
       "chip": "AM263x",
       "pages_analyzed": "1370-1409 (40 pages, inline, single chunk)",
       "flags": "pdf_toc.py --search 'MMCSD' false-positive hit on 1.4.15 feature list (25-24); real chapter located by form-feed page scan of pdftotext output (13.3.3 starts p.1370, 13.3.4 QSPI starts p.1410). Register offsets not in this chapter (SPRUJ42G addendum not read). SDK mcu_plus_sdk_am263x_26_01_00_08: AM263x uses MMCSD v1 (DRV_VERSION_MMCSD_V1); eMMC SBL raw-boot path (appImageOffset, MMCSD_enableBootPartition) is gated by DRV_VERSION_MMCSD_V0 and not built for AM263x."
+    },
+    "sluudi8.pdf": {
+      "status": "DONE",
+      "analyzed_date": "2026-10-12",
+      "output_note": "專業領域/AM13Ex/AM13E230x Bootloader 使用手冊分析 (SLUUDI8).md",
+      "source_pdf": "RAW/sluudi8.pdf",
+      "doc_type": "appnote (guessed paper by filename; sluu prefix not in dispatcher list; content is a TI User's Guide, appnote template used)",
+      "chip": "AM13E230x",
+      "pages_analyzed": "1-31 (single chunk, inline)",
+      "flags": "SDK am13e230x_sdk_26_01_00_03; PDF vs SDK discrepancies recorded in note §8.1 (BSL config address 0x60100C00 vs 0x6010xxxx, default baud)"
     }
   }
 }

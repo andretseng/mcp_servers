@@ -1,0 +1,4 @@
+interface:
+  display_name: "Motor Bench Safety"
+  short_description: "Enforce motor-start and fault safety gates"
+  default_prompt: "Use $motor-safety to check this motor bench phase before enabling the motor."

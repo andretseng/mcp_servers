@@ -1,0 +1,156 @@
+{
+  "env": {},
+  "permissions": {
+    "allow": [
+      "Bash(mcp__ccs-project__getProjectProductReferences)",
+      "Read(//home/andre/workspace_ccstheia/**)",
+      "Bash(env)",
+      "Read(//home/andre/.claude/**)",
+      "Bash(make -j4 all)",
+      "Bash(make -B -j4)",
+      "Bash(make clean *)",
+      "Bash(make -j4)",
+      "Bash(echo \"EXIT_CODE: $?\")",
+      "Bash(make -n)",
+      "Bash(make --debug=basic)",
+      "Bash(make --debug=v)",
+      "Bash(make all *)",
+      "Bash(python3 -m json.tool)",
+      "Bash(awk -F: '$1 <= 3942')",
+      "Bash(awk -F: '$1 <= 3257')",
+      "Bash(awk -F: '$1 <= 2326')",
+      "Bash(awk -F: '$1 >= 3570 && $1 <= 4400')",
+      "Read(//home/andre/Downloads/customers/drone/DSHOT FOC Examples/Dshot_Standalone/**)",
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(grep *)",
+      "Bash(rg *)",
+      "Bash(find *)",
+      "Bash(ls)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(awk *)",
+      "Bash(sed *)",
+      "Bash(sort *)",
+      "Bash(uniq *)",
+      "Bash(cut *)",
+      "Bash(tr *)",
+      "Bash(jq *)",
+      "Bash(python3 -c *)",
+      "Bash(python3 -m *)",
+      "Bash(git log)",
+      "Bash(git log *)",
+      "Bash(git diff)",
+      "Bash(git diff *)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git show *)",
+      "Bash(git branch)",
+      "Bash(git branch *)",
+      "Bash(git remote *)",
+      "Bash(git stash list)",
+      "Bash(git worktree list)",
+      "Bash(git rev-parse *)",
+      "Bash(git ls-files *)",
+      "Bash(git describe *)",
+      "Bash(git tag)",
+      "Bash(git tag *)",
+      "Bash(git blame *)",
+      "Bash(git config --list)",
+      "Bash(git config --get *)",
+      "Bash(which *)",
+      "Bash(file *)",
+      "Bash(stat *)",
+      "Bash(echo *)",
+      "Bash(pwd)",
+      "Bash(cd *)",
+      "Bash(uname *)",
+      "Bash(date)",
+      "Bash(date *)"
+    ],
+    "defaultMode": "auto",
+    "additionalDirectories": [
+      "/home/andre/workspace_ccstheia",
+      "/home/andre/ti",
+      "/home/andre/llm-wiki"
+    ]
+  },
+  "model": "sonnet",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /home/andre/.claude/hooks/karpathy-gate"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "diagram-design@diagram-design": true
+  },
+  "extraKnownMarketplaces": {
+    "diagram-design": {
+      "source": {
+        "source": "github",
+        "repo": "cathrynlavery/diagram-design"
+      }
+    }
+  },
+  "feedbackDrafts": "off",
+  "effortLevel": "xhigh",
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "xhigh"
+    },
+    "claude-sonnet-5": {
+      "effortLevel": "xhigh"
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "high"
+    },
+    "claude-sonnet-5-5": {
+      "effortLevel": "high"
+    }
+  },
+  "tui": "default",
+  "switchModelsOnFlag": true,
+  "remoteControlAtStartup": false,
+  "agentPushNotifEnabled": true,
+  "useAutoModeDuringPlan": true,
+  "autoMode": {
+    "environment": [
+      "### Org-wide",
+      "**Organization**: None configured",
+      "**Cloud provider(s)**: None configured",
+      "**Repository visibility**: not queryable here — assume private (default fallback); note github.com/andretseng/llm-wiki and Gitea mirror at 192.168.33.119:andre/llm-wiki.git are this repo's only remotes",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary (note: mermaid-export skill uses mermaid.ink, a public online service, for non-sensitive diagrams only — offline mmdc required for confidential content per that skill's own doc)",
+      "**Secrets management**: None configured",
+      "**Default / protected branches**: main (default); protection status not queryable here",
+      "**CI/CD deploy targets**: None configured",
+      "**Network posture**: None configured",
+      "**Source control**: This repo (llm-wiki) and its two remotes only — github.com/andretseng/llm-wiki (origin) and Gitea at 192.168.33.119:andre/llm-wiki.git (gitea); no additional orgs configured",
+      "**Trusted internal domains**: 192.168.33.119 (this repo's Gitea remote host)",
+      "**Trusted cloud buckets**: None configured",
+      "**Key internal services**: 192.168.33.119 (Gitea instance backing this repo's second remote)",
+      "**Internal package registry**: None configured",
+      "**Sensitive data locations & audiences**: any file or store holding personal data, confidential business data, credentials, regulated data, or similarly sensitive material; preserve exact handles when known and share only with audiences cleared at the [named+specifics] bar; per this repo's own skill docs, diagrams or notes encoding NDA/confidential content must not go through the public mermaid.ink backend",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment",
+      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
+      "### User-specific",
+      "**Primary use of Claude Code**: personal knowledge-base management (Obsidian vault at $LLM_WIKI_PATH) plus TI SDK/chip analysis and development-notes capture — routine under this repo's own tree",
+      "**Trusted repo**: /home/andre/llm-wiki (this repo), remotes github.com/andretseng/llm-wiki and Gitea 192.168.33.119:andre/llm-wiki.git — visibility not queryable here so treated as private by default; confidential material OK to commit here, but content ported from outside this session's repo is not this repo's own work",
+      "**Org-specific CLIs**: None configured — repo-local tooling only: llm-expand.sh/.ps1, llm-push.sh/.ps1 (vault sync scripts), Python utilities under AI學習/utilities/ (pdf_toc.py, pdf_extract.py, pdf_cleanup.py, mermaid_export.py)",
+      "**routine under ~/llm-wiki/ prefix**: vault note CRUD, skill-driven git commit/push via llm-push.sh/.ps1 to the two configured remotes, PDF analysis pipeline, Python utility invocations under AI學習/utilities/"
+    ]
+  }
+}

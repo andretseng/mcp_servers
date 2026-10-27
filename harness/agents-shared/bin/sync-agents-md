@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""Build every agent's AGENTS.md from the shared sections (~/.agents/AGENTS.md) and the agent's own template (~/.agents/agents-md/<agent>.md).
+A template line `{{SHARED:<heading>}}` is replaced by that section of the shared file. `--check` writes nothing and exits 1 when a target differs."""
+import re
+import sys
+from pathlib import Path
+
+H = Path.home()
+SHARED = H / ".agents" / "AGENTS.md"
+TARGETS = {  # template -> files written from it
+    "opencode": [H / ".config/opencode/AGENTS.md"],
+    "pi": [H / ".pi/agent/AGENTS.md"],
+    "codex": [H / ".codex/AGENTS.md"],
+}
+
+
+def shared_sections() -> dict[str, str]:
+    text = re.sub(r"<!--.*?-->", "", SHARED.read_text(encoding="utf-8"), flags=re.S)
+    return {s.split("\n", 1)[0][3:].strip(): s.rstrip("\n") for s in re.split(r"(?m)^(?=## )", text) if s.startswith("## ")}
+
+
+def build(name: str, shared: dict[str, str]) -> str:
+    tpl = (H / ".agents" / "agents-md" / f"{name}.md").read_text(encoding="utf-8")
+    def put(m):
+        if m.group(1) not in shared:
+            raise SystemExit(f"{name}: no shared section '{m.group(1)}' in {SHARED}")
+        return shared[m.group(1)]
+    return re.sub(r"\{\{SHARED:([^}]+)\}\}", put, tpl).rstrip("\n") + "\n"
+
+
+def main() -> int:
+    check = "--check" in sys.argv
+    shared, bad = shared_sections(), 0
+    for name, files in TARGETS.items():
+        want = build(name, shared)
+        for f in files:
+            have = f.read_text(encoding="utf-8") if f.is_file() else None
+            if have == want:
+                print(f"same     {f}")
+            elif check:
+                print(f"DIFFERS  {f}")
+                bad += 1
+            else:
+                f.write_text(want, encoding="utf-8")
+                print(f"written  {f}")
+    return 1 if bad else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

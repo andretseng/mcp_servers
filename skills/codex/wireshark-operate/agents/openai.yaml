@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wireshark Operate"
+  short_description: "Operate Wireshark MCP captures and evidence"
+  default_prompt: "Use $wireshark-operate for Wireshark MCP capture, EtherCAT packet analysis, and evidence collection."

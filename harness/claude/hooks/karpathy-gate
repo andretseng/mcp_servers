@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# PreToolUse (Edit|Write): karpathy-guidelines gate — global CLAUDE.md "Coding workflow"
+# rule ("invoke /karpathy-guidelines before writing any code").
+#
+# Why a hook and not more rule text: this exact rule already existed verbatim in
+# industrial_comm/CLAUDE.md and was still skipped during real coding sessions
+# (found via token-usage-2026-07-21_to_28-aggregate review, 2026-07-28). Same failure
+# class as the adviser-consult gate (feedback_adviser_consult_timing.md): rule text
+# alone was already proven insufficient for this class of "checklist step easy to skip
+# under context pressure" — enforcement needs to be mechanical.
+#
+# Self-clearing: stays silent once this session's transcript already shows the skill
+# was actually invoked. Matches the exact JSON tool-input substring the Skill tool
+# writes for this call ("skill":"karpathy-guidelines"), NOT a bare string match —
+# a bare "karpathy-guidelines" match would also match this hook's own injected
+# additionalContext text (which necessarily mentions the skill by name), causing the
+# hook to self-silence after firing once without the skill ever actually loading.
+# Non-blocking, same convention as adviser-gate / check-rule-edit.sh.
+input=$(cat)
+tp=$(printf '%s' "$input" | jq -r '.transcript_path // empty' 2>/dev/null)
+file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
+
+# Never fire on vault/notes edits — this rule is about writing code.
+case "$file_path" in
+  /home/andre/llm-wiki/*) exit 0 ;;
+esac
+
+# Only fire for source-code file extensions.
+case "$file_path" in
+  *.c|*.h|*.cpp|*.cc|*.hpp|*.py|*.sh|*.js|*.ts|*.tsx|*.jsx|*.go|*.rs|*Makefile) ;;
+  *) exit 0 ;;
+esac
+
+# Already invoked karpathy-guidelines in this session -> nothing to remind about.
+if [ -n "$tp" ] && [ -f "$tp" ] && grep -q '"skill":"karpathy-guidelines"' "$tp" 2>/dev/null; then
+  exit 0
+fi
+
+printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"CODING WORKFLOW GATE (global CLAUDE.md, Coding workflow section): no karpathy-guidelines skill invocation found yet in this session, and you are about to write/edit a source file. Invoke the karpathy-guidelines skill before proceeding with this edit. If you judge it genuinely unnecessary here (e.g. a one-line mechanical fix), say so explicitly to the user with the reason — do not skip it silently."}}'
+exit 0

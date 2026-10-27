@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "executor-adviser-request-0.2",
+  "title": "Executor–Adviser Request 0.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol",
+    "id",
+    "context_id",
+    "state",
+    "trigger",
+    "trigger_event",
+    "review_scope",
+    "goal",
+    "question",
+    "evidence",
+    "attempts",
+    "constraints",
+    "executor_position",
+    "fallback",
+    "data_classification",
+    "consult_index",
+    "consult_limit"
+  ],
+  "properties": {
+    "protocol": {"const": "executor-adviser/0.2"},
+    "id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "context_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "state": {"const": "submitted"},
+    "trigger": {
+      "enum": ["critical-fact", "failure", "ambiguity", "result-review"]
+    },
+    "trigger_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event", "event_id", "trigger", "trigger_source", "condition", "blocking", "evidence_ready"],
+      "properties": {
+        "event": {"const": "advice-triggered"},
+        "event_id": {"type": "string", "minLength": 1, "maxLength": 128},
+        "trigger": {"enum": ["critical-fact", "failure", "ambiguity", "result-review"]},
+        "trigger_source": {"enum": ["automatic", "user", "pilot"]},
+        "condition": {"type": "string", "minLength": 1, "maxLength": 2000},
+        "blocking": {"type": "boolean"},
+        "evidence_ready": {"type": "boolean"}
+      }
+    },
+    "review_scope": {"enum": ["summary-only", "evidence-read"]},
+    "goal": {"type": "string", "minLength": 1, "maxLength": 4000},
+    "question": {"type": "string", "minLength": 1, "maxLength": 4000},
+    "evidence": {
+      "type": "array",
+      "maxItems": 24,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["uri", "locator"],
+        "properties": {
+          "uri": {"type": "string", "minLength": 1, "maxLength": 2000},
+          "locator": {"type": "string", "minLength": 1, "maxLength": 500},
+          "excerpt": {"type": "string", "maxLength": 6000},
+          "sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"}
+        }
+      }
+    },
+    "attempts": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["method", "result", "ruled_out"],
+        "properties": {
+          "method": {"type": "string", "minLength": 1, "maxLength": 2000},
+          "result": {"type": "string", "minLength": 1, "maxLength": 4000},
+          "raw_error": {"type": "string", "maxLength": 8000},
+          "ruled_out": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {"type": "string", "minLength": 1, "maxLength": 1000}
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "maxItems": 24,
+      "items": {"type": "string", "minLength": 1, "maxLength": 1000}
+    },
+    "executor_position": {"type": "string", "minLength": 1, "maxLength": 4000},
+    "fallback": {"type": "string", "minLength": 1, "maxLength": 2000},
+    "data_classification": {"enum": ["public", "private", "restricted"]},
+    "consult_index": {"type": "integer", "minimum": 1, "maximum": 3},
+    "consult_limit": {"type": "integer", "minimum": 1, "maximum": 3}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "trigger": {"enum": ["critical-fact", "result-review"]}
+        },
+        "required": ["trigger"]
+      },
+      "then": {
+        "properties": {
+          "evidence": {"minItems": 1},
+          "trigger_event": {
+            "properties": {
+              "evidence_ready": {"const": true}
+            }
+          }
+        }
+      }
+    }
+  ]
+}

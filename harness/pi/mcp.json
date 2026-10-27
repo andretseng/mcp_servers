@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "omlx-web": {
+      "command": "bash",
+      "args": [
+        "-c",
+        "export OMLX_API_KEY=\"$(cat \"$HOME/.config/omlx/key\")\"; exec uv run --no-project \"$HOME/.codex/mcp/omlx-web-mcp.py\""
+      ],
+      "env": {
+        "OMLX_BASE_URL": "http://dreammaker.tail1f5a73.ts.net:8000"
+      },
+      "exposure": "direct"
+    }
+  }
+}

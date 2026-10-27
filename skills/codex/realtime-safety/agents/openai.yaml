@@ -1,0 +1,4 @@
+interface:
+  display_name: "Real-Time Control Safety"
+  short_description: "Prevent unsafe halts in live control systems"
+  default_prompt: "Use $realtime-safety to verify this live real-time operation is non-halting and safely stoppable."

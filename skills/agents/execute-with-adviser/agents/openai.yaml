@@ -1,0 +1,4 @@
+interface:
+  display_name: "Execute with Adviser"
+  short_description: "Escalate only critical executor decisions"
+  default_prompt: "Use $execute-with-adviser to execute this task independently and consult the configured adviser only at a deterministic escalation gate."

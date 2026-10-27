@@ -1,0 +1,4 @@
+interface:
+  display_name: "AM13 Serial"
+  short_description: "Provide AM13 UART telemetry settings"
+  default_prompt: "Use $am13-serial for the AM13 telemetry profile, then $serial-op for capture."

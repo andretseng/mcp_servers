@@ -13,3 +13,4 @@ dist/
 
 # Nested git clone (own repo, backed up separately at its own origin)
 siitool/
+utilities/pdf-analysis/

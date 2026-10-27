@@ -1,0 +1,124 @@
+{
+  "providers": {
+    "dreammaker": {
+      "baseUrl": "http://dreammaker.tail1f5a73.ts.net:8000/v1",
+      "api": "openai-completions",
+      "apiKey": "!cat /home/andre/.config/omlx/key",
+      "models": [
+        {
+          "id": "Ornith-1.5-35B-A3B-MLX-8bit",
+          "name": "Ornith 35B (dreammaker)",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 32768,
+          "samplingParams": {
+            "temperature": 0.3,
+            "top_p": 0.95,
+            "top_k": 20
+          },
+          "compat": {
+            "thinkingFormat": "qwen-chat-template"
+          }
+        },
+        {
+          "id": "Qwen3.8-27B-4bit-MTP",
+          "name": "Qwen3.8 27B 4bit MTP (dreammaker)",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 65536,
+          "samplingParams": {
+            "temperature": 1.0,
+            "top_p": 0.95,
+            "top_k": 20,
+            "min_p": 0.0,
+            "presence_penalty": 0.0,
+            "repetition_penalty": 1.0
+          },
+          "input": [
+            "text",
+            "image"
+          ],
+          "compat": {
+            "thinkingFormat": "qwen-chat-template"
+          }
+        },
+        {
+          "id": "Ornith-1.5-122B-MLX-4bit",
+          "name": "Ornith 122B 4bit experiment (dreammaker)",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 65536,
+          "samplingParams": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 20,
+            "min_p": 0.0,
+            "presence_penalty": 0.0,
+            "repetition_penalty": 1.0
+          },
+          "input": [
+            "text",
+            "image"
+          ]
+        }
+      ]
+    },
+    "dreammaker-lan": {
+      "baseUrl": "http://192.168.33.11:8000/v1",
+      "api": "openai-completions",
+      "apiKey": "!cat /home/andre/.config/omlx/key",
+      "models": [
+        {
+          "id": "Ornith-1.5-35B-A3B-MLX-8bit",
+          "name": "Ornith 35B (dreammaker LAN)",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 32768,
+          "samplingParams": {
+            "temperature": 0.3,
+            "top_p": 0.95,
+            "top_k": 20
+          }
+        },
+        {
+          "id": "Qwen3.8-27B-4bit-MTP",
+          "name": "Qwen3.8 27B 4bit MTP (dreammaker LAN)",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 65536,
+          "samplingParams": {
+            "temperature": 1.0,
+            "top_p": 0.95,
+            "top_k": 20,
+            "min_p": 0.0,
+            "presence_penalty": 0.0,
+            "repetition_penalty": 1.0
+          },
+          "input": [
+            "text",
+            "image"
+          ]
+        },
+        {
+          "id": "Ornith-1.5-122B-MLX-4bit",
+          "name": "Ornith 122B 4bit experiment (dreammaker-lan)",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 65536,
+          "samplingParams": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 20,
+            "min_p": 0.0,
+            "presence_penalty": 0.0,
+            "repetition_penalty": 1.0
+          },
+          "input": [
+            "text",
+            "image"
+          ]
+        }
+      ]
+    }
+  }
+}

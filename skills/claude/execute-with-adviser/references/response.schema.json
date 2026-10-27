@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "executor-adviser-response-0.2",
+  "title": "Executor–Adviser Response 0.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol",
+    "id",
+    "context_id",
+    "review_scope",
+    "evidence_checked",
+    "state",
+    "decision",
+    "recommendation",
+    "reason",
+    "change_evidence",
+    "executor_next_step"
+  ],
+  "properties": {
+    "protocol": {"type": "string", "const": "executor-adviser/0.2"},
+    "id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "context_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "review_scope": {"enum": ["summary-only", "evidence-read"]},
+    "evidence_checked": {
+      "type": "array",
+      "maxItems": 24,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 2000}
+    },
+    "state": {
+      "enum": ["completed", "input-required", "rejected", "failed", "timeout"]
+    },
+    "decision": {"enum": ["proceed", "change", "stop", "need-evidence"]},
+    "recommendation": {"type": "string", "minLength": 1, "maxLength": 4000},
+    "reason": {"type": "string", "minLength": 1, "maxLength": 4000},
+    "change_evidence": {
+      "type": "string",
+      "description": "Concrete evidence that, if observed, would change the recommendation; if none realistically would, say so explicitly rather than leaving this field empty or generic.",
+      "minLength": 1,
+      "maxLength": 3000
+    },
+    "executor_next_step": {"type": "string", "minLength": 1, "maxLength": 3000}
+  }
+}

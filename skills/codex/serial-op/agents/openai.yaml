@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serial Ops"
+  short_description: "Operate serial-mcp telemetry capture safely"
+  default_prompt: "Use $serial-op with an explicit device-specific serial contract to validate, capture, and save serial data."

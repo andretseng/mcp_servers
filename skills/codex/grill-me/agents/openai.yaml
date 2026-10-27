@@ -1,0 +1,4 @@
+interface:
+  display_name: "Grill Me"
+  short_description: "Turn ambiguity into an executable plan"
+  default_prompt: "Use $grill-me to stress-test this idea one decision at a time until we have an executable plan."

@@ -1,0 +1,7 @@
+{
+  "defaultProvider": "omlx",
+  "defaultModel": "Ornith-1.5-35B-A3B-MLX-8bit",
+  "defaultThinkingLevel": "low",
+  "packages": [],
+  "lastChangelogVersion": "1.4.0"
+}

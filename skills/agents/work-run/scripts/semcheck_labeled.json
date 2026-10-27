@@ -1,0 +1,282 @@
+[
+ {
+  "id": "S11",
+  "kind": "supported",
+  "label": "SUPPORTED",
+  "claim": "Code computes timer counts from the constant `IOTIM_TIMER_CLOCK` = 80000000",
+  "basis": "verified",
+  "evidence": "`mcu/mspm0g3507/config.h`: `#define IOTIM_TIMER_CLOCK   (80000000)`; `src/common.h:48`: `#define CLK_CNT(clk,rate) ((clk + ((rate) >> 1)) / (rate))`"
+ },
+ {
+  "id": "S12",
+  "kind": "supported",
+  "label": "SUPPORTED",
+  "claim": "`CLK_CNT(clk,rate)` ≈ `round(clk/rate)`",
+  "basis": "verified",
+  "evidence": "`src/common.h:48` `#define CLK_CNT(clk,rate) ((clk + ((rate) >> 1)) / (rate))` — round-half-up via the `+rate/2` term"
+ },
+ {
+  "id": "S14",
+  "kind": "supported",
+  "label": "SUPPORTED",
+  "claim": "`dshotarr2` is loaded into the transmit timer period register",
+  "basis": "verified",
+  "evidence": "`src/io.c:674` `DL_Timer_setLoadValue(IOTIM_INST, dshotarr2);`"
+ },
+ {
+  "id": "S19",
+  "kind": "supported",
+  "label": "SUPPORTED",
+  "claim": "Receive decode thresholds are `y = dshotarr1+1` and `z = y>>2`",
+  "basis": "verified",
+  "evidence": "`src/io.c:681` `int y = dshotarr1 + 1;` and `src/io.c:682` `int z = y >> 2;`"
+ },
+ {
+  "id": "S29",
+  "kind": "supported",
+  "label": "SUPPORTED",
+  "claim": "`src/io.c:212` still contains `375000 << m`, not `187500`",
+  "basis": "verified",
+  "evidence": "`dshotarr2 = CLK_CNT(IOTIM_TIMER_CLOCK, 375000 << m) - 1;` (`src/io.c:212`)"
+ },
+ {
+  "id": "S31",
+  "kind": "supported",
+  "label": "SUPPORTED",
+  "claim": "`CLK_CNT(clk,rate) ≈ clk/rate` (rounds)",
+  "basis": "verified",
+  "evidence": "`src/common.h:48` `#define CLK_CNT(clk,rate) ((clk + ((rate) >> 1)) / (rate))`"
+ },
+ {
+  "id": "S32",
+  "kind": "supported",
+  "label": "SUPPORTED",
+  "claim": "IOTIM reply timer clock = 80 MHz",
+  "basis": "verified",
+  "evidence": "`mcu/mspm0g3507/config.h:74` `#define IOTIM_TIMER_CLOCK (80000000)`; `src/common.h:51` `#define CLK_MHZ (CLK/1000000)`"
+ },
+ {
+  "id": "S39",
+  "kind": "supported",
+  "label": "SUPPORTED",
+  "claim": "`CLK_CNT(clk,rate) = (clk + rate/2)/rate`; `rate>>1 == rate/2` for non‑neg ints",
+  "basis": "verified",
+  "evidence": "`src/common.h:48` `#define CLK_CNT(clk,rate) ((clk + ((rate) >> 1)) / (rate))`; Python: `(clk+(r>>1))//r == (clk+(r//2))//r` = True"
+ },
+ {
+  "id": "S40",
+  "kind": "supported",
+  "label": "SUPPORTED",
+  "claim": "Reply timer clock = 80 MHz",
+  "basis": "verified",
+  "evidence": "`mcu/mspm0g3507/config.h:49` `#define CLK (80000000)` and `config.h:74` `#define IOTIM_TIMER_CLOCK (80000000)`"
+ },
+ {
+  "id": "S47",
+  "kind": "supported",
+  "label": "SUPPORTED",
+  "claim": "Both DShot init sites use the same `375000 << m` constant",
+  "basis": "verified",
+  "evidence": "`src/io.c:212` `dshotarr2 = CLK_CNT(IOTIM_TIMER_CLOCK, 375000 << m) - 1;` and `src/io.c:413` `dshotarr2 = CLK_CNT(375000 << m) - 1;`"
+ },
+ {
+  "id": "S51",
+  "kind": "supported",
+  "label": "SUPPORTED",
+  "claim": "dshotarr1 coeff rescaled, dshotarr2 not",
+  "basis": "verified",
+  "evidence": "`dshotarr1 = CLK_CNT(IOTIM_TIMER_CLOCK, 75000 << m)` `io.c:211` vs `dshotarr1 = CLK_CNT(150000 << m)` `io.c:412`; `dshotarr2 = ... 375000 << m` in `io.c:212` and `io.c:413`"
+ },
+ {
+  "id": "S54",
+  "kind": "supported",
+  "label": "SUPPORTED",
+  "claim": "Code uses assumed timer clock = 80 MHz",
+  "basis": "verified",
+  "evidence": "`#define CLK (80000000)` (`config.h:49`); `#define IOTIM_TIMER_CLOCK   (80000000)` (`config.h:74`)"
+ },
+ {
+  "id": "S56",
+  "kind": "supported",
+  "label": "SUPPORTED",
+  "claim": "`dshotarr1` rescaled, `dshotarr2` not",
+  "basis": "verified",
+  "evidence": "`dshotarr1 = CLK_CNT(IOTIM_TIMER_CLOCK, 75000 << m) - 1;` (`io.c:211`) vs `dshotarr1 = CLK_CNT(150000 << m) - 1;` (`io.c:412`); `dshotarr2 = CLK_CNT(IOTIM_TIMER_CLOCK, 375000 << m) - 1;` (`io.c:212`) vs `io.c:413`"
+ },
+ {
+  "id": "N0",
+  "kind": "real-wrong",
+  "label": "NOT_SUPPORTED",
+  "claim": "`dshotarr2` defines the timer period used for the telemetry slot/timeout",
+  "basis": "verified",
+  "evidence": "`src/io.c:278`"
+ },
+ {
+  "id": "N3",
+  "kind": "real-wrong",
+  "label": "NOT_SUPPORTED",
+  "claim": "The timer timeout was $0.75$s",
+  "basis": "verified",
+  "evidence": "`src/io.c:278` + `config.c`"
+ },
+ {
+  "id": "N5",
+  "kind": "real-wrong",
+  "label": "NOT_SUPPORTED",
+  "claim": "`dshotarr2` is assigned a calculated value",
+  "basis": "verified",
+  "evidence": "`src/io.c:278`"
+ },
+ {
+  "id": "N7",
+  "kind": "real-wrong",
+  "label": "NOT_SUPPORTED",
+  "claim": "The period for $m=1$ is $750,000\\mu s$",
+  "basis": "verified",
+  "evidence": "`src/io.c:278` + `common.h`"
+ },
+ {
+  "id": "N9",
+  "kind": "real-wrong",
+  "label": "NOT_SUPPORTED",
+  "claim": "The original constant `375000 << m` was twice the required value for DShot300",
+  "basis": "verified",
+  "evidence": "`// Extended DShot Telemetry bit rate is 2.5 times DShot bit rate` (line 389)"
+ },
+ {
+  "id": "N10",
+  "kind": "real-wrong",
+  "label": "NOT_SUPPORTED",
+  "claim": "The reported RPM of 35714 corresponds to an `erpm` of 214,284",
+  "basis": "verified",
+  "evidence": "`a = min(erpm / (cfg.telem_poles * 3), 0xffff);` (line 1266)"
+ },
+ {
+  "id": "N21",
+  "kind": "real-wrong",
+  "label": "NOT_SUPPORTED",
+  "claim": "`dshotarr2` is computed identically in both branches",
+  "basis": "verified",
+  "evidence": "`src/io.c:212` `dshotarr2 = CLK_CNT(IOTIM_TIMER_CLOCK, 375000 << m) - 1;` (MSPM0) vs `src/io.c:413` `dshotarr2 = CLK_CNT(375000 << m) - 1;` (STM32)"
+ },
+ {
+  "id": "N33",
+  "kind": "real-wrong",
+  "label": "NOT_SUPPORTED",
+  "claim": "For DShot300, `m = 1`",
+  "basis": "verified",
+  "evidence": "`src/io.c:183` `while (t >= CLK_CNT(IOTIM_TIMER_CLOCK,800000)) t >>= 1, --m;` + comment `src/io.c:187` `// 1 DShot300 ~3.33µs`"
+ },
+ {
+  "id": "X14-19",
+  "kind": "mismatch",
+  "label": "NOT_SUPPORTED",
+  "claim": "`dshotarr2` is loaded into the transmit timer period register",
+  "basis": "verified",
+  "evidence": "`src/io.c:681` `int y = dshotarr1 + 1;` and `src/io.c:682` `int z = y >> 2;`"
+ },
+ {
+  "id": "X12-32",
+  "kind": "mismatch",
+  "label": "NOT_SUPPORTED",
+  "claim": "`CLK_CNT(clk,rate)` ≈ `round(clk/rate)`",
+  "basis": "verified",
+  "evidence": "`mcu/mspm0g3507/config.h:74` `#define IOTIM_TIMER_CLOCK (80000000)`; `src/common.h:51` `#define CLK_MHZ (CLK/1000000)`"
+ },
+ {
+  "id": "X32-14",
+  "kind": "mismatch",
+  "label": "NOT_SUPPORTED",
+  "claim": "IOTIM reply timer clock = 80 MHz",
+  "basis": "verified",
+  "evidence": "`src/io.c:674` `DL_Timer_setLoadValue(IOTIM_INST, dshotarr2);`"
+ },
+ {
+  "id": "X29-11",
+  "kind": "mismatch",
+  "label": "NOT_SUPPORTED",
+  "claim": "`src/io.c:212` still contains `375000 << m`, not `187500`",
+  "basis": "verified",
+  "evidence": "`mcu/mspm0g3507/config.h`: `#define IOTIM_TIMER_CLOCK   (80000000)`; `src/common.h:48`: `#define CLK_CNT(clk,rate) ((clk + ((rate) >> 1)) / (rate))`"
+ },
+ {
+  "id": "X47-19",
+  "kind": "mismatch",
+  "label": "NOT_SUPPORTED",
+  "claim": "Both DShot init sites use the same `375000 << m` constant",
+  "basis": "verified",
+  "evidence": "`src/io.c:681` `int y = dshotarr1 + 1;` and `src/io.c:682` `int z = y >> 2;`"
+ },
+ {
+  "id": "X51-54",
+  "kind": "mismatch",
+  "label": "NOT_SUPPORTED",
+  "claim": "dshotarr1 coeff rescaled, dshotarr2 not",
+  "basis": "verified",
+  "evidence": "`#define CLK (80000000)` (`config.h:49`); `#define IOTIM_TIMER_CLOCK   (80000000)` (`config.h:74`)"
+ },
+ {
+  "id": "X19-47",
+  "kind": "mismatch",
+  "label": "NOT_SUPPORTED",
+  "claim": "Receive decode thresholds are `y = dshotarr1+1` and `z = y>>2`",
+  "basis": "verified",
+  "evidence": "`src/io.c:212` `dshotarr2 = CLK_CNT(IOTIM_TIMER_CLOCK, 375000 << m) - 1;` and `src/io.c:413` `dshotarr2 = CLK_CNT(375000 << m) - 1;`"
+ },
+ {
+  "id": "X39-29",
+  "kind": "mismatch",
+  "label": "NOT_SUPPORTED",
+  "claim": "`CLK_CNT(clk,rate) = (clk + rate/2)/rate`; `rate>>1 == rate/2` for non‑neg ints",
+  "basis": "verified",
+  "evidence": "`dshotarr2 = CLK_CNT(IOTIM_TIMER_CLOCK, 375000 << m) - 1;` (`src/io.c:212`)"
+ },
+ {
+  "id": "B8",
+  "kind": "borderline",
+  "label": null,
+  "claim": "`dshotarr2` is used as the timer load value for end-of-frame detection",
+  "basis": "verified",
+  "evidence": "`DL_Timer_setLoadValue(IOTIM_INST, dshotarr2);` (line 415/876)"
+ },
+ {
+  "id": "B13",
+  "kind": "borderline",
+  "label": null,
+  "claim": "DShot300 → variant `m=1`",
+  "basis": "verified",
+  "evidence": "`src/io.c:183` `m = 3; while (t >= CLK_CNT(IOTIM_TIMER_CLOCK,800000)) t >>= 1, --m;`"
+ },
+ {
+  "id": "B18",
+  "kind": "borderline",
+  "label": null,
+  "claim": "The two branches use the **same** `dshotarr2 = 375000<<m` and store it as the period; they **differ** only in `dshotarr1` and the clock macro",
+  "basis": "verified",
+  "evidence": "`src/io.c:413` `dshotarr2 = CLK_CNT(375000 << m) - 1;` vs `src/io.c:212`; `src/io.c:412` `dshotarr1 = CLK_CNT(150000 << m) - 1;` vs `src/io.c:211` `dshotarr1 = CLK_CNT(IOTIM_TIMER_CLOCK, 75000 << m) - 1;`"
+ },
+ {
+  "id": "B25",
+  "kind": "borderline",
+  "label": null,
+  "claim": "`dshotarr2` sets the ESC→FC telemetry-reply bit period",
+  "basis": "verified",
+  "evidence": "`io.c:674`: `DL_Timer_setLoadValue(IOTIM_INST, dshotarr2);` · `io.c:872`: `TIM_ARR(IOTIM) = dshotarr2;`"
+ },
+ {
+  "id": "B28",
+  "kind": "borderline",
+  "label": null,
+  "claim": "Reply payload is `ertm`-derived and throttle-dependent; only the bit rate differs between versions",
+  "basis": "verified",
+  "evidence": "`io.c:618`: `int a = ertm ? min(ertm, 65408) : 65408;` · `io.c:842`: `int a = ertm ? min(ertm, 65408) : 65408;` · `main.c:266`: `ertm = (buf[0] + buf[1] + buf[2] + buf[3] + buf[4] + buf[5]) >> (IFTIM_XRES + 1);`"
+ },
+ {
+  "id": "B50",
+  "kind": "borderline",
+  "label": null,
+  "claim": "MSPM0 m = 1 vs STM32 m = 0 for DShot300",
+  "basis": "verified",
+  "evidence": "MSPM0 `m = 3;` `io.c:182` vs STM32 `int m = 2;` `io.c:402`; loops `io.c:183` / `io.c:403`"
+ }
+]
